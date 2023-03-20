@@ -1,0 +1,10 @@
+.idea
+.vscode
+.calva
+.DS_Store
+
+.lsp
+.clj-kondo
+.cpcache
+
+target

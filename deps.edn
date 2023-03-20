@@ -1,0 +1,12 @@
+{:paths ["src" "resources"]
+ :mvn/repos {"github-kepler" {:url "https://maven.pkg.github.com/kepler16/*"}}
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        org.babashka/cli {:mvn/version "0.4.39"}}
+
+ :aliases {:meta {:deps {kepler16/metabuild {:mvn/version "0.3.6"}}
+                  :ns-default k16.metabuild.api}
+           :build {:k16/metabuild
+                   {:kind :uber
+                    :lib kl6/kl
+                    :uber-file "target/kl.jar"
+                    :main kl.cli}}}}

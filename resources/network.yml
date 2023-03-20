@@ -1,0 +1,62 @@
+networks:
+  kl:
+    name: kl
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.5.0.0/24
+
+services:
+  dnsmasq-external:
+    image: andyshinn/dnsmasq
+    restart: unless-stopped
+    command:
+    - --conf-file=/dnsmasq-config/dnsmasq.conf
+    - --except-interface=lo
+    - --bind-interfaces
+    - --log-queries
+    - --log-facility=-
+    ports:
+    - '53:53/udp'
+    - '53:53/tcp'
+    cap_add:
+    - NET_ADMIN
+    volumes:
+    - ./config/dnsmasq-external.conf:/dnsmasq-config/dnsmasq.conf
+
+  dnsmasq-internal:
+    image: andyshinn/dnsmasq
+    restart: unless-stopped
+    command:
+    - --conf-file=/dnsmasq-config/dnsmasq.conf
+    - --except-interface=lo
+    - --bind-interfaces
+    - --log-queries
+    - --log-facility=-
+    networks:
+      kl:
+        ipv4_address: 172.5.0.100
+    cap_add:
+    - NET_ADMIN
+    volumes:
+    - ./config/dnsmasq-internal.conf:/dnsmasq-config/dnsmasq.conf
+
+  proxy:
+    image: traefik:v2.6
+    restart: unless-stopped
+    networks:
+      kl:
+        ipv4_address: 172.5.0.101
+    command:
+    - --api.insecure=true
+    - --providers.docker
+    - --providers.docker.network=kl
+    - --providers.file.directory=/proxy-config
+    - --providers.file.watch=true
+    ports: ['80:80', '1001:8080']
+    labels:
+    - traefik.http.routers.proxy.rule=Host(`proxy.test`)
+    - traefik.http.services.proxy.loadbalancer.server.port=8080
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ~/.config/kl/proxy:/proxy-config
