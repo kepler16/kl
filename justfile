@@ -1,5 +1,10 @@
 build:
   clojure -T:meta run :alias build
 
-native-image: build
-  $GRAALVM_HOME/bin/native-image -jar target/kl.jar -H:Name=target/kl -H:+ReportUnsupportedElementsAtRuntime --no-fallback
+build-native: build
+  $GRAALVM_HOME/bin/native-image \
+    -jar target/kl.jar \
+    --no-fallback \
+    -H:Name=target/kl \
+    -H:+ReportUnsupportedElementsAtRuntime \
+    -H:ResourceConfigurationFiles=resources.json
