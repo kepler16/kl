@@ -8,11 +8,6 @@
        (map #(format "%02x" %))
        (apply str)))
 
-(defn rm-dir [^java.io.File file]
-  (when (.isDirectory file)
-    (run! rm-dir (.listFiles file)))
-  (io/delete-file file))
-
 (defn prepare-config []
   (let [dir (io/file (System/getProperty "java.io.tmpdir") (str "kl-network" (gen-hash 5)))
         files ["network.yml" "config/dnsmasq-internal.conf" "config/dnsmasq-external.conf"]]
@@ -37,8 +32,6 @@
               "-f" (.toString (io/file dir "network.yml"))
               "up" "-d" "--remove-orphans")
 
-    (rm-dir dir)
-
     (println "Network started")))
 
 (defn stop-network [_]
@@ -50,8 +43,6 @@
               "-p" "kl"
               "-f" (.toString (io/file dir "network.yml"))
               "stop")
-
-    (rm-dir dir)
 
     (println "Network stopped")))
 
