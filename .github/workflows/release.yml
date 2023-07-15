@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          binary-name: kl-linux
+        - os: macos-latest
+          binary-name: kl-macos
+
+    env:
+      GITHUB_USERNAME: ${{ secrets.ORG_GITHUB_ACTOR }}
+      GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: 17
+
+    - uses: extractions/setup-just@v1
+    - uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: latest
+
+    - uses: graalvm/setup-graalvm@v1
+      with:
+        version: 'latest'
+        java-version: '17'
+        components: 'native-image'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Auth
+      run: |
+        cp ./build/settings.xml ~/.m2/settings.xml
+
+    - name: Build Native Image
+      run: just build-native
+
+    - name: Pack binary
+      run: |
+        tar -czf ${{ matrix.binary-name }}-aarch64.tar.gz -C ./target kl
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: kl-native-images
+        if-no-files-found: error
+        path: ${{ matrix.binary-name }}-aarch64.tar.gz
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Binary Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: kl-native-images
+          path: bin
+
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            bin/*
