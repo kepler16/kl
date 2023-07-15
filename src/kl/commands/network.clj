@@ -57,5 +57,5 @@
 
     (println "Network stopped")))
 
-(def commands [{:cmds ["up"] :fn start-network}
-               {:cmds ["down"] :fn stop-network}])
+(def commands [{:cmds ["network" "start"] :fn start-network}
+               {:cmds ["network" "stop"] :fn stop-network}])
