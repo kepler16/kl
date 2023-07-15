@@ -9,6 +9,12 @@ We are trying to solve three primary problems:
   + It must be able to route traffic that comes _from_ the host machine or from a docker container
   + Must be able to route traffic _to_ processes running on the host or in docker containers
 
+## Installation
+
+```bash
+bash < <(curl -s https://raw.githubusercontent.com/kepler16/kl/master/install.sh)
+```
+
 ## Network Topology
 
 We make use of three main networking components:
@@ -75,7 +81,7 @@ http:
         - url: http://host.docker.internal:8080
 ```
 
-Substituting all occurrences of `example` with the service name (i.e. `oxide`) and `8080` with whatever port the process is bound to on your host.
+Substituting all occurrences of `example` with the service name (i.e. `example`) and `8080` with whatever port the process is bound to on your host.
 
 > Note that because the Traefik proxy is running in the docker network, you need to refer to your host machine as `host.docker.internal` instead of the normal `localhost` or `127.0.0.1`.
 
