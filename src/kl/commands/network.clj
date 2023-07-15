@@ -15,7 +15,9 @@
 
 (defn prepare-config []
   (let [dir (io/file (System/getProperty "java.io.tmpdir") (str "kl-network" (gen-hash 5)))
-        files ["network.yml" "config/dnsmasq-internal.conf" "config/dnsmasq-external.conf"]]
+        files ["config/dnsmasq-internal.conf" "config/dnsmasq-external.conf"
+               "images/Dockerfile.dnsmasq-external" "images/Dockerfile.dnsmasq-internal"
+               "network.yml"]]
 
     (->> files
          (map (fn [file]

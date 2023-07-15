@@ -8,7 +8,9 @@ networks:
 
 services:
   dnsmasq-external:
-    image: andyshinn/dnsmasq
+    build:
+      context: .
+      dockerfile: ./images/Dockerfile.dnsmasq-external
     restart: unless-stopped
     command:
     - --conf-file=/dnsmasq-config/dnsmasq.conf
@@ -21,11 +23,11 @@ services:
     - '53:53/tcp'
     cap_add:
     - NET_ADMIN
-    volumes:
-    - ./config/dnsmasq-external.conf:/dnsmasq-config/dnsmasq.conf
 
   dnsmasq-internal:
-    image: andyshinn/dnsmasq
+    build:
+      context: .
+      dockerfile: ./images/Dockerfile.dnsmasq-internal
     restart: unless-stopped
     command:
     - --conf-file=/dnsmasq-config/dnsmasq.conf
@@ -38,8 +40,6 @@ services:
         ipv4_address: 172.5.0.100
     cap_add:
     - NET_ADMIN
-    volumes:
-    - ./config/dnsmasq-internal.conf:/dnsmasq-config/dnsmasq.conf
 
   proxy:
     image: traefik:v2.6
