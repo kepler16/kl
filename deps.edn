@@ -3,7 +3,9 @@
  :paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
         org.babashka/cli {:mvn/version "0.4.39"}
-        babashka/process {:mvn/version "0.5.21"}}
+        babashka/process {:mvn/version "0.5.21"}
+        jansi-clj/jansi-clj {:mvn/version "1.0.1"}
+        clj-commons/clj-yaml {:mvn/version "1.0.26"}}
 
  :aliases {:meta {:deps {kepler16/metabuild {:mvn/version "0.3.6"}}
                   :ns-default k16.metabuild.api}
