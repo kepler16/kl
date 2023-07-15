@@ -19,6 +19,35 @@ bash < <(curl -s https://raw.githubusercontent.com/kepler16/kl/master/install.sh
 
 Or you can get the binaries directly from the GitHub releases page and put them on your PATH.
 
+## Usage
+
+If this is your first time using this tool on your machine then you will need to setup your system DNS resolver:
+
+```bash
+eval $(kl resolver setup)
+```
+
+The you can start the docker network and proxy containers:
+
+```bash
+kl network start
+# and `kl network stop` to tear it down 
+```
+
+Proxy configurations can be managed with the `kl proxy` subcommands `create, delete, list, enable, disable`. For example, to add your first configuration run:
+
+```bash
+kl proxy create --name example --domain example.test --url ':9090'
+```
+
+This will now be routing `example.test` to port `9090` on your host machine. Specifying only the port (`:9999`) will use the default host). You can always secify the full url: `--url=http://host.docker.internal:9999`.
+
+Configurations can be deleted, disabled and re-enabled by referencing them by name:
+
+```bash
+kl proxy disable example,another-example
+```
+
 ## Network Topology
 
 We make use of three main networking components:
@@ -27,7 +56,7 @@ We make use of three main networking components:
 + A dnsmasq container which handles DNS from the host machine (Bound to :53) and resolves to `127.0.0.1`
 + A dnsmasq container which handles DNS requests from docker containers and resolves to the Traefik proxy
 
-All three components are running inside a Docker network and have predefined, static IP addresses. It's necessary to have two separate dnsmasq containers as the proxy is identified differently from the host vs from inside the docker network. On mac, the host machine will need to configure `/etc/resolver/test` to point to `127.0.0.1` so that the dnsmasq container can handle DNS requests for `.test` domains. There is a convenience `setup-resolver` cli command to help automate this.
+All three components are running inside a Docker network and have predefined, static IP addresses. It's necessary to have two separate dnsmasq containers as the proxy is identified differently from the host vs from inside the docker network. On mac, the host machine will need to configure `/etc/resolver/test` to point to `127.0.0.1` so that the dnsmasq container can handle DNS requests for `.test` domains. There is a convenience `resolver setup` cli command to help automate this.
 
 Which this topology, the following properties are observed:
 
