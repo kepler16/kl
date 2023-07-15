@@ -1,7 +1,7 @@
 (ns kl.commands.network
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.java.shell :as shell]))
+  (:require
+   [clojure.java.io :as io]
+   [babashka.process :as proc]))
 
 (defn gen-hash [n]
   (->> (repeatedly n #(rand-int 256))
@@ -34,10 +34,10 @@
 
     (println "Starting network")
 
-    (shell/sh "docker" "compose"
-              "-p" "kl"
-              "-f" (.toString (io/file dir "network.yml"))
-              "up" "-d" "--remove-orphans")
+    (proc/shell ["docker" "compose"
+                 "-p" "kl"
+                 "-f" (.toString (io/file dir "network.yml"))
+                 "up" "-d" "--remove-orphans"])
 
     (rm-dir dir)
 
@@ -48,10 +48,10 @@
 
     (println "Stopping network")
 
-    (shell/sh "docker" "compose"
-              "-p" "kl"
-              "-f" (.toString (io/file dir "network.yml"))
-              "stop")
+    (proc/shell ["docker" "compose"
+                 "-p" "kl"
+                 "-f" (.toString (io/file dir "network.yml"))
+                 "stop"])
 
     (rm-dir dir)
 
