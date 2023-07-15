@@ -26,7 +26,7 @@ jobs:
     - uses: actions/setup-java@v2
       with:
         distribution: 'temurin'
-        java-version: 17
+        java-version: 19
 
     - uses: extractions/setup-just@v1
     - uses: DeLaGuardo/setup-clojure@9.5
@@ -35,9 +35,10 @@ jobs:
 
     - uses: graalvm/setup-graalvm@v1
       with:
-        version: 'latest'
-        java-version: '17'
+        version: '22.3.1'
+        java-version: '19'
         components: 'native-image'
+        cache: 'maven'
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configure Auth
@@ -49,7 +50,7 @@ jobs:
 
     - name: Pack binary
       run: |
-        tar -czf ${{ matrix.binary-name }}-aarch64.tar.gz -C ./target kl
+        tar -czf ${{ matrix.binary-name }}-amd64.tar.gz -C ./target kl
 
     - uses: actions/upload-artifact@v3
       with:

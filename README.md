@@ -11,9 +11,13 @@ We are trying to solve three primary problems:
 
 ## Installation
 
+You can use the below script to automatically install the latest release
+
 ```bash
 bash < <(curl -s https://raw.githubusercontent.com/kepler16/kl/master/install.sh)
 ```
+
+Or you can get the binaries directly from the GitHub releases page and put them on your PATH.
 
 ## Network Topology
 
