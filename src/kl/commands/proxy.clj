@@ -24,18 +24,22 @@
     (io/make-parents file)
     file))
 
+(defn proxy->routing-rule [{:keys [domain prefix]}]
+  (cond-> (str "Host(`" domain "`)")
+    prefix (str " && PathPrefix(`" prefix "`)")))
+
 (defn project-proxies [proxies]
   (let [file (get-proxies-projection-file)
 
         traefik-config
         (->> proxies
              (reduce (fn [acc [name proxy]]
-                       (let [{:keys [domain url enabled]} proxy]
+                       (let [{:keys [url enabled]} proxy]
                          (if-not enabled
                            acc
                            (-> acc
                                (assoc-in [:http :routers name]
-                                         {:rule (str "Host(`" domain "`)")
+                                         {:rule (proxy->routing-rule proxy)
                                           :service name})
                                (assoc-in [:http :services name :loadbalancer :servers]
                                          [{:url url}])))))
@@ -45,16 +49,18 @@
     (spit file data)))
 
 (defn calculate-table-widths [proxies]
-  (let [init {:name 0 :url 0 :domain 0}]
+  (let [init {:name 0 :url 0 :domain 0 :prefix 0}]
     (->> proxies
          (reduce (fn [acc [name proxy]]
-                   (let [{:keys [url domain]} proxy
+                   (let [{:keys [url domain prefix]} proxy
                          namec (count name)
                          urlc (count url)
+                         prefixc (count (or prefix ""))
                          domainc (count domain)]
                      (cond-> acc
                        (> namec (:name acc)) (assoc :name namec)
                        (> urlc (:url acc)) (assoc :url urlc)
+                       (> prefixc (:prefix acc)) (assoc :prefix prefixc)
                        (> domainc (:domain acc)) (assoc :domain domainc))))
                  init))))
 
@@ -73,7 +79,7 @@
          widths (-> (calculate-table-widths proxies)
                     (merge {:enabled 7}))]
 
-     (doseq [col [:name :domain :url :enabled]]
+     (doseq [col [:name :domain :url :prefix :enabled]]
        (let [width (get widths col)
              value (-> (name col)
                        str/capitalize
@@ -86,12 +92,14 @@
        (let [name (-> name (format-string (:name widths)))
              domain (-> proxy :domain (format-string (:domain widths)))
              url (-> proxy :url (format-string (:url widths)))
+             prefix (-> proxy :prefix (format-string (:prefix widths)))
              enabled (-> proxy :enabled str (format-string (:enabled widths)))
 
              line (str
                    "@|bold,blue " name "|@ "
                    domain " "
                    url " "
+                   prefix " "
                    "@|bold," (if (:enabled proxy) "green" "red") " " enabled "|@ "
                    \newline)]
          (print (color/render line))))
@@ -113,6 +121,7 @@
         proxies' (assoc proxies
                         (:name opts)
                         {:domain (:domain opts)
+                         :prefix (:prefix opts)
                          :url url
                          :enabled true})]
     (write-proxies-file file proxies')
@@ -149,7 +158,8 @@
                {:cmds ["proxy" "create"]
                 :fn create-proxy
                 :require [:name :domain :url]
-                :coerce {:url :string}
+                :coerce {:url :string
+                         :prefix :string}
                 :exec-args {:host "http://host.docker.internal"}}
                {:cmds ["proxy" "delete"] :fn delete-proxy :args->opts [:name] :require [:name]}
                {:cmds ["proxy" "enable"] :fn enable-proxy :args->opts [:name] :require [:name]}
