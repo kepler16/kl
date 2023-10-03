@@ -3,7 +3,7 @@
 set -euo pipefail
 
 version=""
-default_install_dir="/usr/local/bin"
+default_install_dir="$HOME/.local/bin"
 install_dir="$default_install_dir"
 download_dir=""
 
@@ -64,7 +64,7 @@ if [[ "$version" == "" ]]; then
     version=$(curl -s https://api.github.com/repos/$github_user/$repo/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 fi
 
-filename="$repo-$os-aarch64.tar.gz"
+filename="$repo-$os-$(arch).tar.gz"
 download_url="https://github.com/$github_user/$repo/releases/download/$version/$filename"
 
 echo -e "Downloading $download_url to $download_dir"
