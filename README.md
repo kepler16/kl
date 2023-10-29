@@ -18,6 +18,17 @@ Its responsibilities can be summarized as follows:
   + Must be able to route traffic _to_ processes running on the host or in docker containers
 + Enable easilly managing proxy configurations
 
+---
+
+### Index
+
++ [**Installation**](#installation)
++ [**Network Topology**](./docs/network-topology.md)
++ [**Modules**](#modules)
++ [**Services**](#services)
++ [**Endpoints**](#endpoints)
++ [**Routes**](#routes)
+
 ## Installation
 
 You can use the below script to automatically install the latest release
@@ -28,9 +39,9 @@ bash < <(curl -s https://raw.githubusercontent.com/kepler16/kl/master/install.sh
 
 Or you can get the binaries directly from the GitHub releases page and put them on your PATH.
 
-## Quick Start
+---
 
-If this is your first time using this tool on your machine then you will need to setup your system DNS resolver:
+If this is your first time using this tool on your machine then you will need to setup your system's DNS resolver:
 
 ```bash
 eval $(kl resolver setup)
@@ -43,123 +54,51 @@ kl network start
 # and `kl network stop` to tear it down 
 ```
 
-Proxy configurations can be managed with the `kl proxy` subcommands `create, delete, list, enable, disable`. For example, to add your first configuration run:
-
-```bash
-kl proxy create --name example --domain example.test --url ':9090'
-```
-
-This will now be routing `example.test` to port `9090` on your host machine. Specifying only the port (`:9999`) will use the default host). You can always secify the full url: `--url=http://host.docker.internal:9999`.
-
-Configurations can be deleted, disabled and re-enabled by referencing them by name:
-
-```bash
-kl proxy disable example,another-example
-```
+These containers are configured to always restart, even after exiting/restarting docker.
 
 ## Network Topology
 
-We make use of three main networking components:
+For an overview of the network topology constructed by this tool head over to the [Network Topology](./docs/network-topology.md) document.
 
-+ A Traefik Proxy docker container (Bound to :80) configured to proxy `.test` subdomains to either containers or processes on the host machine
-+ A dnsmasq container which handles DNS from the host machine (Bound to :53) and resolves to `127.0.0.1`
-+ A dnsmasq container which handles DNS requests from docker containers and resolves to the Traefik proxy
+## Modules
 
-All three components are running inside a Docker network and have predefined, static IP addresses. It's necessary to have two separate dnsmasq containers as the proxy is identified differently from the host vs from inside the docker network. On mac, the host machine will need to configure `/etc/resolver/test` to point to `127.0.0.1` so that the dnsmasq container can handle DNS requests for `.test` domains. There is a convenience `resolver setup` cli command to help automate this.
+A module is an isolated configuration of [containers](#containers), [services](#services), [endpoints](#endpoints) and [routes](#routes). A module can also contain sub-modules which point to some remotely defined `module`. Sub-modules are resolved and merged into the root module.
 
-Which this topology, the following properties are observed:
+A module is a directory located in `~/.config/kl/modules/` that must contain at least a file called `module.edn`. This file looks as follows:
 
-+ All `*.test` DNS requests made from the host machine are routed to `127.0.0.1`
-+ All `*.test` DNS requests made from within the docker network are routed to `172.16.238.4` which is the IP address of the proxy inside the network
+```clj
+{:modules {:module-name {:url "owner/repo"
+                         :ref "optional-ref"
+                         :sha "optional-sha"
+                         :subdir "optional/sub/directory"}}
 
-> Note: All docker containers that need to be able to resolve `.test` domains must have their DNS server (use the flag `--dns`) set to the IP of the internal dnsmasq container
+ :network {:services {:service-a {:endpoints {:container {:url "http://container-a"}
+                                              :host {:url "http://host.docker.internal:3000"}}
+                                  :default-endpoint :container}}
+           :routes {:a {:host "a.test"
+                        :service :service-a}}}
 
-```mermaid
-flowchart TD
-  subgraph host[Host]
-    proc3
+ ;; structurally the same as a docker-compose `volume`
+ :volumes {} 
 
-    subgraph docker[Docker Network]
-      proc1
-      proc2
-
-      subgraph dns
-       de[Dnsmasq External]
-       di[Dnsmasq Internal]
-      end
-
-      proxy[Traefik Proxy]
-
-      proc1 -. proc2.test .-> di
-      proc2 -. proc3.test .-> di
-
-      di -. dns resolution .-> proxy
-    end
-  end
-
-
-  proc3 -. proc1.test .-> de -. dns resolution .-> proxy
-
-  proxy --proxies to--> proc1 & proc2 & proc3
+ ;; structurally the same as a docker-compose `service`
+ :containers {:container-a {:image ""}}} 
 ```
 
-## IPs
+Any defined submodules follow the same format and will be merged into the root module. When pulling modules their ref will be resolved to a commit at the point in time they are pulled and this commit will be stored in a lockfile called `module.lock.edn`. This means that if modules are changed upstream they will not affect your local configuration until you explicitly pull their updates down.
 
-+ Internal DNSMasQ - `172.5.0.100`
-+ Proxy IP - `172.5.0.101`
+## Containers
 
-## Proxy Configuration
+A container is a docker-compose `service` snippet. It supports all of the same fields and will be converted into a docker-compose file when run. When running containers with `kl containers run` you will be given a choice of which containers to start. If any containers that were running are deselected, they will be stopped.
 
-The Traefik Proxy is configured with the `docker` and `file` providers. The `file` provider is configured to watch the mounted directory `~/.config/kl/proxy` which can be used by users and tools to configure arbitrary proxy endpoints. It is recommended to read up on [Traefik Proxy](https://doc.traefik.io/traefik/) to get an overall understanding of how the proxy works and how to configure it. For the lazy, below is a tl;dr of the most common type of configuration.
+## Services
 
-If you are wanting to route traffic to docker containers then you can use labels on the docker container:
+A service is a stable container around a set of [endpoints](#endpoints). A service is configured with a `:default-endpoint` to which all traffic will be routed to by default. Services are generally referenced to by [routes](#routes). This configuration allows swapping which endpoint a service is routing to without having to reconfigure individual [routes](#routes).
 
-```yml
-networks:
-  kl:
-    external: true
+## Endpoints
 
-services:
-  example:
-    image: tutum/hello-world
-    dns: 172.5.0.100
-    networks:
-    - kl
-    expose: ["80"]
-    labels:
-    - traefik.http.routers.example.rule=Host(`example.test`)
-    # - traefik.http.services.proxy.loadbalancer.example.port=80 # Use this label if there are no `expose`d ports (or if there are more than 1)
-```
+An endpoint is defined as part of a [service](#services) and generally represents some process running somewhere that is reachable over HTTP. This can be a container, a process on the host machine or some remote service in the cloud.
 
-Traefik will automatically discover the container and configure itself to proxy `example.test` to port `80` on the container. To specify a different port you can use `traefik.http.services.example.loadbalancer.server.port=1234`.
+## Routes
 
----
-
-To manually configure Traefik to proxy requests to processes running on the host machine, you will need to use the `file` provider. Create or reuse a file in your `~/.config/kl/proxy` directory and add the following config:
-
-```yml
-# ~/.config/kl/proxy/example.yml
-http:
-  routers:
-    test:
-      rule: Host(`example.test`)
-      service: example
-
-  services:
-    example:
-      loadBalancer:
-        servers:
-        - url: http://host.docker.internal:8080
-```
-
-Substituting all occurrences of `example` with the service name (i.e. `example`) and `8080` with whatever port the process is bound to on your host.
-
-> Note that because the Traefik proxy is running in the docker network, you need to refer to your host machine as `host.docker.internal` instead of the normal `localhost` or `127.0.0.1`.
-
-Traefik will automatically detect the file change and reconfigure itself.
-
-You can access `http://proxy.test` to see all configured routing rules.
-
----
-
-It is recommended however to use the `kl proxy` subcommands for managing host machine proxy configurations. It removes the overhead of having to edit this file manually and has a mechanism for disabling/enabling proxy configurations without having to keep deleting/readding them.
+A route is an HTTP routing rule made up of a combination of `host` and `prefix`. A route points to a [service](#services) and will route to whichever `default-endpoint` is configured on the service. A route may also specify a specific [endpoint](#endpoint) on the service to route through which would override the default endpoint configured on the service.
