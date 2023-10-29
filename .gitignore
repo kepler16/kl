@@ -1,11 +1,10 @@
 .idea
 .vscode
-.calva
 .DS_Store
 
+.cpcache
 .lsp
 .clj-kondo
-.cpcache
 .nrepl-port
 
 target

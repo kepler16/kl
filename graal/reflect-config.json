@@ -1,0 +1,15 @@
+[
+  {
+    "name": "jline.Terminal"
+  },
+  {
+    "name": "jline.UnixTerminal",
+    "queryAllPublicMethods": true,
+    "methods": [
+      {
+        "name": "restoreTerminal",
+        "parameterTypes": []
+      }
+    ]
+  }
+]

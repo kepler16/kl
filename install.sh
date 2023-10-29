@@ -8,60 +8,60 @@ install_dir="$default_install_dir"
 download_dir=""
 
 print_help() {
-    echo "Installs latest (or specific) version of the tool. Installation directory defaults to /usr/local/bin."
-    echo
-    echo "Usage:"
-    echo "install [--dir <dir>] [--download-dir <download-dir>] [--version <version>]"
-    echo
-    echo "Defaults:"
-    echo " * Installation directory: ${default_install_dir}"
-    echo " * Download directory: temporary"
-    echo " * Version: <Latest release on github>"
-    exit 1
+  echo "Installs latest (or specific) version of the tool. Installation directory defaults to /usr/local/bin."
+  echo
+  echo "Usage:"
+  echo "install [--dir <dir>] [--download-dir <download-dir>] [--version <version>]"
+  echo
+  echo "Defaults:"
+  echo " * Installation directory: ${default_install_dir}"
+  echo " * Download directory: temporary"
+  echo " * Version: <Latest release on github>"
+  exit 1
 }
 
 while [[ $# -gt 0 ]]
 do
-    key="$1"
-    case "$key" in
-        --dir)
-            install_dir="$2"
-            shift
-            shift
-            ;;
-        --download-dir)
-            download_dir="$2"
-            shift
-            shift
-            ;;
-        --version)
-            version="$2"
-            shift
-            shift
-            ;;
-        *)    # unknown option
-            print_help
-            shift
-            ;;
-    esac
+  key="$1"
+  case "$key" in
+    --dir)
+        install_dir="$2"
+        shift
+        shift
+        ;;
+    --download-dir)
+        download_dir="$2"
+        shift
+        shift
+        ;;
+    --version)
+        version="$2"
+        shift
+        shift
+        ;;
+    *)    # unknown option
+        print_help
+        shift
+        ;;
+  esac
 done
 
 if [[ -z "$download_dir" ]]; then
-    download_dir="$(mktemp -d)"
-    trap 'rm -rf "$download_dir"' EXIT
+  download_dir="$(mktemp -d)"
+  trap 'rm -rf "$download_dir"' EXIT
 fi
 
 github_user="kepler16"
 repo="kl"
 
 case "$(uname -s)" in
-    Linux*)  os=linux;;
-    Darwin*) os=macos;;
-    *)       echo "unknown: $(uname -s)"; exit 1;;
+Linux*)  os=linux;;
+Darwin*) os=macos;;
+*)       echo "unknown: $(uname -s)"; exit 1;;
 esac
 
 if [[ "$version" == "" ]]; then
-    version=$(curl -s https://api.github.com/repos/$github_user/$repo/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -s https://api.github.com/repos/$github_user/$repo/releases/latest | jq -r '.tag_name')
 fi
 
 filename="$repo-$os-$(arch).tar.gz"
@@ -74,12 +74,12 @@ tar -zxf "$download_dir/$filename" -C "$download_dir"
 
 if [[ "$download_dir" != "$install_dir" ]]
 then
-    mkdir -p "$install_dir"
-    if [ -f "$install_dir/$repo" ]; then
-        echo "Moving $install_dir/kl to $install_dir/kl.old"
-        mv -f "$install_dir/kl" "$install_dir/kl.old"
-    fi
-    mv -f "$download_dir/kl" "$install_dir/kl"
+  mkdir -p "$install_dir"
+  if [ -f "$install_dir/$repo" ]; then
+    echo "Moving $install_dir/kdev to $install_dir/kdev.old"
+    mv -f "$install_dir/kdev" "$install_dir/kdev.old"
+  fi
+  mv -f "$download_dir/kdev" "$install_dir/kdev"
 fi
 
 echo "Successfully installed $repo in $install_dir"

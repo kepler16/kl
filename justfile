@@ -1,15 +1,24 @@
-run +ARGS:
-  clojure -M ./src/kl/cli.clj {{ARGS}}
+clean:
+  clojure -T:build clean
 
-build:
-  clojure -T:meta run :alias build
+build: clean
+  clojure -T:build uber
 
-build-native: build
+native-image:
   $GRAALVM_HOME/bin/native-image \
     -jar target/kl.jar \
     --no-fallback \
+    --enable-preview \
+    --features=clj_easy.graal_build_time.InitClojureClasses \
     -H:Name=target/kl \
+    -H:ReflectionConfigurationFiles=./graal/reflect-config.json \
     -H:+ReportUnsupportedElementsAtRuntime \
-    -H:+ReportExceptionStackTraces \
-    -H:ResourceConfigurationFiles=resources.json \
-    --initialize-at-build-time='org.yaml.snakeyaml.DumperOptions$FlowStyle'
+    -H:+ReportExceptionStackTraces
+
+build-native: build native-image
+
+build-and-run: build
+  java --enable-preview -jar target/cli.jar
+
+run *args: 
+  clojure -m k16.kl.cli {{args}}
