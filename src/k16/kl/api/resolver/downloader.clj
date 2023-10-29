@@ -6,6 +6,7 @@
    [clojure.string :as str]
    [k16.kl.api.fs :as api.config]
    [k16.kl.api.github :as api.github]
+   [k16.kl.log :as log]
    [promesa.core :as p]))
 
 (set! *warn-on-reflection* true)
@@ -20,7 +21,7 @@
                                  :headers {"Accept" "application/vnd.github.raw"}})]
 
     (when (not= 200 (:status res))
-      (println (str "Failed to pull " identifier "@" sha "/" path))
+      (log/info (str "Failed to pull " identifier "@" sha "/" path))
       (cli.util/exit! (:body res) 1))
 
     (slurp (:body res))))
@@ -43,7 +44,7 @@
               :SHA_SHORT sha-short
               :DIR build-dir}]
 
-    (println (str "Downloading " url "@" sha-short))
+    (log/info (str "Downloading " url "@" sha-short))
 
     (let [config (-> (read-repo-file url sha (relative-to subdir "module.edn"))
                      (replace-vars vars)
@@ -53,7 +54,7 @@
         (->> (:include config)
              (map (fn [file]
                     (p/vthread
-                     (println (str "Downloading " file " [" module-name "]"))
+                     (log/info (str "Downloading " file " [" module-name "]"))
                      (let [contents (-> (read-repo-file url sha (relative-to subdir file))
                                         (replace-vars vars))]
                        (spit (io/file build-dir file) contents)))))))

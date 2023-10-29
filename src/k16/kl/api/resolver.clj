@@ -5,6 +5,7 @@
    [k16.kl.api.fs :as api.fs]
    [k16.kl.api.github :as api.github]
    [k16.kl.api.resolver.downloader :as resolver.downloader]
+   [k16.kl.log :as log]
    [promesa.core :as p]))
 
 (set! *warn-on-reflection* true)
@@ -16,7 +17,7 @@
                  (json/read-value json/keyword-keys-object-mapper))]
 
     (when (not= 200 (:status res))
-      (println (str "Failed to resolve " identifier "@" ref))
+      (log/info (str "Failed to resolve " identifier "@" ref))
       (cli.util/exit! (:message data) 1))
 
     (:sha data)))
@@ -25,7 +26,7 @@
                             :or {ref "master"}}]
 
   (when-not sha
-    (println (str "Resolving " url (if subdir (str "/" subdir) ""))))
+    (log/info (str "Resolving " url (if subdir (str "/" subdir) ""))))
 
   (let [sha (if sha sha (get-commit-for-ref url ref))]
     (cond-> {:url url :sha sha :ref ref}

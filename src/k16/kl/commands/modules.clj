@@ -2,6 +2,7 @@
   (:require
    [k16.kl.api.fs :as api.fs]
    [k16.kl.api.resolver :as api.resolver]
+   [k16.kl.log :as log]
    [k16.kl.prompt.config :as prompt.config]))
 
 (set! *warn-on-reflection* true)
@@ -11,8 +12,8 @@
         updated? (api.resolver/pull! group-name {:update-lockfile? update
                                                  :force? force})]
     (if updated?
-      (println "Services updated")
-      (println "Services are all up to date"))))
+      (log/info "Services updated")
+      (log/info "Services are all up to date"))))
 
 (defn- set-default-module! [props]
   (let [group-name (prompt.config/get-group-name (assoc props :skip-default? true))]
