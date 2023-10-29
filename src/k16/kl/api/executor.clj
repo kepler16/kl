@@ -26,9 +26,9 @@
     (cond-> base
       (seq containers) (assoc :services containers))))
 
-(defn- exec-configuration! [{:keys [group-name module direction]}]
+(defn- exec-configuration! [{:keys [module-name module direction]}]
   (let [compose-data (build-docker-compose module)
-        compose-file (api.fs/from-submodule-work-dir group-name "docker-compose.yaml")
+        compose-file (api.fs/from-module-work-dir module-name "docker-compose.yaml")
 
         direction (if (:services compose-data) direction :down)
 
@@ -41,7 +41,7 @@
     (try
       (proc/shell (concat
                    ["docker" "compose"
-                    "--project-name" (str "kl-" group-name)]
+                    "--project-name" (str "kl-" module-name)]
 
                    args))
       (catch Exception _))))

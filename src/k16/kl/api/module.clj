@@ -6,12 +6,12 @@
 
 (set! *warn-on-reflection* true)
 
-(defn- merge-modules [group-name root-module sub-modules]
-  (let [state (api.state/get-state group-name)
+(defn- merge-modules [module-name root-module sub-modules]
+  (let [state (api.state/get-state module-name)
         merged
         (->> sub-modules
-             (reduce (fn [acc [module-name]]
-                       (let [module-file (api.fs/from-submodule-dir group-name module-name "module.edn")
+             (reduce (fn [acc [submodule-name]]
+                       (let [module-file (api.fs/from-submodule-dir module-name submodule-name "module.edn")
                              module (api.fs/read-edn module-file)]
                          (metamerge/meta-merge acc module)))
                      {}))]
@@ -20,6 +20,6 @@
      root-module
      (select-keys state [:network :containers]))))
 
-(defn get-resolved-module [group-name modules]
-  (let [root-module (api.fs/read-edn (api.fs/get-root-module-file group-name))]
-    (dissoc (merge-modules group-name root-module modules) :modules)))
+(defn get-resolved-module [module-name modules]
+  (let [root-module (api.fs/read-edn (api.fs/get-root-module-file module-name))]
+    (dissoc (merge-modules module-name root-module modules) :modules)))

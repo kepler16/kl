@@ -2,11 +2,11 @@
   (:require
    [k16.kl.api.fs :as api.fs]))
 
-(defn get-state-file [group-name]
-  (api.fs/from-submodule-work-dir group-name "state.edn"))
+(defn get-state-file [module-name]
+  (api.fs/from-module-work-dir module-name "state.edn"))
 
-(defn get-state [group-name]
-  (api.fs/read-edn (get-state-file group-name)))
+(defn get-state [module-name]
+  (api.fs/read-edn (get-state-file module-name)))
 
-(defn save-state [group-name state]
-  (api.fs/write-edn (get-state-file group-name) state))
+(defn save-state [module-name state]
+  (api.fs/write-edn (get-state-file module-name) state))

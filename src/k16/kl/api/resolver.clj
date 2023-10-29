@@ -34,28 +34,28 @@
 
 (defn- resolve-modules [{:keys [module lock force-resolve?]}]
   (->> (:modules module)
-       (map (fn [[module-name module]]
+       (map (fn [[submodule-name location]]
               (p/vthread
-               (let [lock-entry (get lock module-name)
+               (let [lock-entry (get lock submodule-name)
 
                      should-resolve?
                      (or (not (:sha lock-entry))
 
-                         (and (:sha module) (not= (:sha module) (:sha lock-entry)))
-                         (and (:ref module) (not= (:ref module) (:ref lock-entry)))
-                         (and (:subdir module) (not= (:subdir module) (:subdir lock-entry)))
+                         (and (:sha location) (not= (:sha location) (:sha lock-entry)))
+                         (and (:ref location) (not= (:ref location) (:ref lock-entry)))
+                         (and (:subdir location) (not= (:subdir location) (:subdir lock-entry)))
 
                          force-resolve?)]
                  (if should-resolve?
-                   [module-name (resolve-module-sha module)]
-                   [module-name lock-entry])))))
+                   [submodule-name (resolve-module-sha location)]
+                   [submodule-name lock-entry])))))
        doall
        (map (fn [promise] @promise))
        (into {})))
 
-(defn pull! [group-name {:keys [update-lockfile? force?]}]
-  (let [module (api.fs/read-edn (api.fs/get-root-module-file group-name))
-        lock (api.fs/read-edn (api.fs/get-lock-file group-name))
+(defn pull! [module-name {:keys [update-lockfile? force?]}]
+  (let [module (api.fs/read-edn (api.fs/get-root-module-file module-name))
+        lock (api.fs/read-edn (api.fs/get-lock-file module-name))
 
         modules (resolve-modules {:module module
                                   :lock lock
@@ -65,17 +65,17 @@
 
         downloads (when (or lockfile-updated? force?)
                     (->> modules
-                         (map (fn [[module-name module]]
+                         (map (fn [[submodule-name module]]
                                 (p/vthread
                                  (resolver.downloader/download-remote-module!
-                                  {:group-name group-name
-                                   :module-name (name module-name)
+                                  {:module-name module-name
+                                   :submodule-name (name submodule-name)
                                    :module module}))))
 
                          doall))]
 
     (when lockfile-updated?
-      (api.fs/write-edn (api.fs/get-lock-file group-name) modules))
+      (api.fs/write-edn (api.fs/get-lock-file module-name) modules))
 
     (when downloads
       (doseq [download downloads]

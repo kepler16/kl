@@ -4,8 +4,8 @@
    [k16.kl.api.fs :as api.fs]
    [meta-merge.core :as metamerge]))
 
-(defn- get-proxies-projection-file [group-name]
-  (api.fs/from-config-dir "proxy/" (str group-name ".yaml")))
+(defn- get-proxies-projection-file [module-name]
+  (api.fs/from-config-dir "proxy/" (str module-name ".yaml")))
 
 (defn- route->traefik-rule [{:keys [host path-prefix]}]
   (cond-> (str "Host(`" host "`)")
@@ -43,7 +43,7 @@
 
     (metamerge/meta-merge services routes)))
 
-(defn write-proxy-config! [{:keys [group-name module]}]
+(defn write-proxy-config! [{:keys [module-name module]}]
   (let [routes (build-routes module)
-        file (get-proxies-projection-file group-name)]
+        file (get-proxies-projection-file module-name)]
     (spit file (yaml/generate-string routes))))

@@ -31,12 +31,12 @@
                  (str/replace acc (str "{{" (name key) "}}") value))
                contents)))
 
-(defn download-remote-module! [{:keys [group-name module-name module]}]
+(defn download-remote-module! [{:keys [module-name submodule-name module]}]
   (let [{:keys [sha url subdir]
          :or {subdir ".kl"}} module
         sha-short (subs sha 0 7)
 
-        submodule-dir (-> (api.fs/from-submodule-dir group-name module-name)
+        submodule-dir (-> (api.fs/from-submodule-dir module-name submodule-name)
                           .toString)
 
         vars {:SHA sha
@@ -53,9 +53,9 @@
         (->> (:include config)
              (map (fn [file]
                     (p/vthread
-                     (log/info (str "Downloading " file " [" module-name "]"))
+                     (log/info (str "Downloading " file " [" submodule-name "]"))
                      (let [contents (-> (read-repo-file url sha (relative-to subdir file))
                                         (replace-vars vars))]
-                       (spit (api.fs/from-submodule-dir group-name module-name file) contents)))))))
+                       (spit (api.fs/from-submodule-dir module-name submodule-name file) contents)))))))
 
-      (api.fs/write-edn (api.fs/from-submodule-dir group-name module-name "module.edn") config))))
+      (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.edn") config))))

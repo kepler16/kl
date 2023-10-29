@@ -17,17 +17,17 @@
   {:command "list"
    :description "Select containers to run"
 
-   :opts [{:option "group"
+   :opts [{:option "module"
            :short 0
            :type :string}]
 
    :runs (fn [props]
-           (let [group-name (prompt.config/get-group-name props)
+           (let [module-name (prompt.config/get-module-name props)
 
-                 {:keys [modules]} (api.resolver/pull! group-name {})
-                 module (api.module/get-resolved-module group-name modules)
+                 {:keys [modules]} (api.resolver/pull! module-name {})
+                 module (api.module/get-resolved-module module-name modules)
 
-                 state (api.state/get-state group-name)
+                 state (api.state/get-state module-name)
 
                  containers (->> (:containers module)
                                  (map (fn [[container-name container]]
@@ -41,17 +41,17 @@
   {:command "run"
    :description "Select containers to run"
 
-   :opts [{:option "group"
+   :opts [{:option "module"
            :short 0
            :type :string}]
 
    :runs (fn [props]
-           (let [group-name (prompt.config/get-group-name props)
+           (let [module-name (prompt.config/get-module-name props)
 
-                 {:keys [modules]} (api.resolver/pull! group-name {})
-                 module (api.module/get-resolved-module group-name modules)
+                 {:keys [modules]} (api.resolver/pull! module-name {})
+                 module (api.module/get-resolved-module module-name modules)
 
-                 state (api.state/get-state group-name)
+                 state (api.state/get-state module-name)
 
                  options (->> (:containers module)
                               (map (fn [[container-name]]
@@ -71,27 +71,28 @@
                                       [container-name {:enabled enabled}])))
                              (into {})))]
 
-             (api.state/save-state group-name updated-state)
+             (api.state/save-state module-name updated-state)
 
              (let [module (metamerge/meta-merge module updated-state)]
-               (api.proxy/write-proxy-config! {:group-name group-name
+               (api.proxy/write-proxy-config! {:module-name module-name
                                                :module module})
-               (api.executor/start-configuration! {:group-name group-name
+               (api.executor/start-configuration! {:module-name module-name
                                                    :module module}))))})
 
 (def ^:private stop-cmd
   {:command "down"
    :description "Stop all running containers "
 
-   :opts [{:option "group"
+   :opts [{:option "module"
            :short 0
            :type :string}]
 
    :runs (fn [props]
-           (let [group-name (prompt.config/get-group-name props)
-                 services (api.fs/read-edn (api.fs/get-root-module-file group-name))]
-             (api.executor/stop-configuration! {:group-name group-name
-                                                :services services})))})
+           (let [module-name (prompt.config/get-module-name props)
+                 {:keys [modules]} (api.resolver/pull! module-name {})
+                 module (api.module/get-resolved-module module-name modules)]
+             (api.executor/stop-configuration! {:module-name module-name
+                                                :module module})))})
 
 (def cmd
   {:command "containers"

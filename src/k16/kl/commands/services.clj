@@ -10,12 +10,12 @@
    [pretty.cli.prompt :as prompt]))
 
 (defn- set-default-service-endpoint! [props]
-  (let [group-name (prompt.config/get-group-name props)
+  (let [module-name (prompt.config/get-module-name props)
 
-        {:keys [modules]} (api.resolver/pull! group-name {})
-        module (api.module/get-resolved-module group-name modules)
+        {:keys [modules]} (api.resolver/pull! module-name {})
+        module (api.module/get-resolved-module module-name modules)
 
-        state (api.state/get-state group-name)
+        state (api.state/get-state module-name)
 
         service-name
         (-> (prompt/list-select "Select Service"
@@ -39,17 +39,17 @@
         (assoc-in state [:network :services service-name :default-endpoint]
                   endpoint-name)]
 
-    (api.state/save-state group-name updated-state)
+    (api.state/save-state module-name updated-state)
 
     (let [module (metamerge/meta-merge module updated-state)]
-      (api.proxy/write-proxy-config! {:group-name group-name
+      (api.proxy/write-proxy-config! {:module-name module-name
                                       :module module}))))
 
 (defn- list-services [props]
-  (let [group-name (prompt.config/get-group-name props)
+  (let [module-name (prompt.config/get-module-name props)
 
-        {:keys [modules]} (api.resolver/pull! group-name {})
-        module (api.module/get-resolved-module group-name modules)
+        {:keys [modules]} (api.resolver/pull! module-name {})
+        module (api.module/get-resolved-module module-name modules)
 
         services (->> (get-in module [:network :services])
                       (map (fn [[service-name service]]
@@ -64,7 +64,7 @@
    :subcommands [{:command "list"
                   :description "List all services"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}]
 
@@ -73,7 +73,7 @@
                  {:command "set-endpoint"
                   :description "Set the default endpoint for a service"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}]
 

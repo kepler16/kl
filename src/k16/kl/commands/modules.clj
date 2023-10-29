@@ -8,16 +8,16 @@
 (set! *warn-on-reflection* true)
 
 (defn- pull! [{:keys [update force] :as props}]
-  (let [group-name (prompt.config/get-group-name props)
-        updated? (api.resolver/pull! group-name {:update-lockfile? update
-                                                 :force? force})]
+  (let [module-name (prompt.config/get-module-name props)
+        updated? (api.resolver/pull! module-name {:update-lockfile? update
+                                                  :force? force})]
     (if updated?
       (log/info "Services updated")
       (log/info "Services are all up to date"))))
 
 (defn- set-default-module! [props]
-  (let [group-name (prompt.config/get-group-name (assoc props :skip-default? true))]
-    (api.fs/write-edn (api.fs/get-config-file) {:default-module group-name})))
+  (let [module-name (prompt.config/get-module-name (assoc props :skip-default? true))]
+    (api.fs/write-edn (api.fs/get-config-file) {:default-module module-name})))
 
 (def cmd
   {:command "module"
@@ -25,7 +25,7 @@
 
    :subcommands [{:command "set-default"
                   :description "Set the default module"
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}]
                   :runs set-default-module!}
@@ -33,7 +33,7 @@
                  {:command "pull"
                   :description "Pull down changes to a module"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}
 
@@ -50,7 +50,7 @@
                  {:command "update"
                   :description "Resolve the latest sha's of a module. This is the same as `pull --update`"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}
 

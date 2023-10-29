@@ -6,10 +6,10 @@
    [k16.kl.prompt.config :as prompt.config]))
 
 (defn- list-endpoints [props]
-  (let [group-name (prompt.config/get-group-name props)
+  (let [module-name (prompt.config/get-module-name props)
 
-        {:keys [modules]} (api.resolver/pull! group-name {})
-        module (api.module/get-resolved-module group-name modules)
+        {:keys [modules]} (api.resolver/pull! module-name {})
+        module (api.module/get-resolved-module module-name modules)
 
         selected-service-name (keyword (:service props))
 
@@ -37,7 +37,7 @@
    :subcommands [{:command "list"
                   :description "List all endpoints"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}
 

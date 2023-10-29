@@ -7,12 +7,12 @@
    [k16.kl.prompt.config :as prompt.config]))
 
 (defn- list-routes [props]
-  (let [group-name (prompt.config/get-group-name props)
+  (let [module-name (prompt.config/get-module-name props)
 
-        {:keys [modules]} (api.resolver/pull! group-name {})
-        module (api.module/get-resolved-module group-name modules)
+        {:keys [modules]} (api.resolver/pull! module-name {})
+        module (api.module/get-resolved-module module-name modules)
 
-        state (api.state/get-state group-name)
+        state (api.state/get-state module-name)
 
         routes (->> (get-in module [:network :routes])
                     (map (fn [[route-name route]]
@@ -29,7 +29,7 @@
    :subcommands [{:command "list"
                   :description "List all routes"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}]
 
@@ -38,7 +38,7 @@
                  {:command "configure"
                   :description "Select which routes are enabled or disabled"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}]
 
@@ -47,14 +47,14 @@
                  {:command "set-service"
                   :description "Set the service for a route"
 
-                  :opts [{:option "group"
+                  :opts [{:option "module"
                           :short 0
                           :type :string}]
 
                   :runs (fn [_])} {:command "set-endpoint"
                                    :description "Set the endpoint for a route"
 
-                                   :opts [{:option "group"
+                                   :opts [{:option "module"
                                            :short 0
                                            :type :string}]
 

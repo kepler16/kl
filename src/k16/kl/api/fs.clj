@@ -24,11 +24,11 @@
 (defn get-lock-file ^java.io.File [group-name]
   (from-modules-dir group-name "module.lock.edn"))
 
-(defn from-submodule-work-dir ^java.io.File [group-name & segments]
-  (from-modules-dir group-name ".kl" (flatten segments)))
+(defn from-module-work-dir ^java.io.File [module-name & segments]
+  (from-modules-dir module-name ".kl" (flatten segments)))
 
-(defn from-submodule-dir ^java.io.File [group-name module-name & segments]
-  (from-submodule-work-dir group-name ".modules" (name module-name) (flatten segments)))
+(defn from-submodule-dir ^java.io.File [module-name submodule-name & segments]
+  (from-module-work-dir module-name ".modules" (name submodule-name) (flatten segments)))
 
 (defn read-edn [^java.io.File file]
   (try
@@ -39,7 +39,7 @@
   (let [contents (with-out-str (pprint/pprint data))]
     (spit file contents)))
 
-(defn list-configuration-groups []
+(defn list-modules []
   (let [dir (from-modules-dir)]
     (->> (.listFiles dir)
          (filter (fn [^java.io.File file]
