@@ -60,13 +60,14 @@
                                       :checked (get-in state [:containers container-name :enabled] true)})))
                  selected-containers (->> options
                                           (prompt/list-checkbox "Select Services")
+                                          (map keyword)
                                           set)
 
                  updated-state
                  (assoc state :containers
                         (->> (:containers module)
                              (map (fn [[container-name]]
-                                    (let [enabled (boolean (some #{(name container-name)} selected-containers))]
+                                    (let [enabled (boolean (some #{container-name} selected-containers))]
                                       [container-name {:enabled enabled}])))
                              (into {})))]
 

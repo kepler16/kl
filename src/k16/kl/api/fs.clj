@@ -13,9 +13,7 @@
     file))
 
 (defn from-modules-dir ^java.io.File [& segments]
-  (let [file (from-config-dir "modules" (flatten segments))]
-    (io/make-parents file)
-    file))
+  (from-config-dir "modules" (flatten segments)))
 
 (defn get-config-file ^java.io.File []
   (from-config-dir "config.edn"))

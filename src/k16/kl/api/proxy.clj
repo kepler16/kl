@@ -1,12 +1,11 @@
 (ns k16.kl.api.proxy
   (:require
    [clj-yaml.core :as yaml]
-   [clojure.java.io :as io]
    [k16.kl.api.fs :as api.fs]
    [meta-merge.core :as metamerge]))
 
 (defn- get-proxies-projection-file [group-name]
-  (api.fs/from-config-dir "proxy/" group-name ".yaml"))
+  (api.fs/from-config-dir "proxy/" (str group-name ".yaml")))
 
 (defn- route->traefik-rule [{:keys [host path-prefix]}]
   (cond-> (str "Host(`" host "`)")
@@ -35,9 +34,11 @@
                              endpoint-name (or (:endpoint route)
                                                (:default-endpoint service))]
 
-                         (assoc-in acc [:http :routers (name route-name)]
-                                   {:rule (route->traefik-rule route)
-                                    :service (str (name service-name) "-" (name endpoint-name))})))
+                         (if (and service-name endpoint-name)
+                           (assoc-in acc [:http :routers (name route-name)]
+                                     {:rule (route->traefik-rule route)
+                                      :service (str (name service-name) "-" (name endpoint-name))})
+                           acc)))
                      {}))]
 
     (metamerge/meta-merge services routes)))
@@ -45,6 +46,4 @@
 (defn write-proxy-config! [{:keys [group-name module]}]
   (let [routes (build-routes module)
         file (get-proxies-projection-file group-name)]
-
-    (io/make-parents file)
     (spit file (yaml/generate-string routes))))
