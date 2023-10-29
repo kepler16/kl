@@ -6,9 +6,13 @@
 
 (set! *warn-on-reflection* true)
 
+(def ^:private cached-auth-token
+  (delay
+    (let [res (proc/sh ["gh" "auth" "token"])]
+      (-> res :out str/trim))))
+
 (defn- get-auth-token []
-  (let [res (proc/sh ["gh" "auth" "token"])]
-    (-> res :out str/trim)))
+  @cached-auth-token)
 
 (defn request [{:keys [path headers]}]
   (let [res
