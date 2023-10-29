@@ -9,10 +9,11 @@ native-image:
     -jar target/kl.jar \
     --no-fallback \
     --features=clj_easy.graal_build_time.InitClojureClasses \
-    -H:Name=target/kl \
+    --report-unsupported-elements-at-runtime \
+    -o target/kl \
+    -H:+UnlockExperimentalVMOptions \
     -H:ReflectionConfigurationFiles=./graal/reflect-config.json \
     -H:ResourceConfigurationFiles=./graal/resources.json \
-    -H:+ReportUnsupportedElementsAtRuntime \
     -H:+ReportExceptionStackTraces
 
 build-native: build native-image
