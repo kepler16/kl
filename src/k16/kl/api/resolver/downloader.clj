@@ -2,9 +2,8 @@
   (:require
    [cli-matic.utils :as cli.util]
    [clojure.edn :as edn]
-   [clojure.java.io :as io]
    [clojure.string :as str]
-   [k16.kl.api.fs :as api.config]
+   [k16.kl.api.fs :as api.fs]
    [k16.kl.api.github :as api.github]
    [k16.kl.log :as log]
    [promesa.core :as p]))
@@ -37,12 +36,12 @@
          :or {subdir ".kl"}} module
         sha-short (subs sha 0 7)
 
-        build-dir (-> (api.config/from-submodule-build-dir group-name module-name)
-                      .toString)
+        submodule-dir (-> (api.fs/from-submodule-dir group-name module-name)
+                          .toString)
 
         vars {:SHA sha
               :SHA_SHORT sha-short
-              :DIR build-dir}]
+              :DIR submodule-dir}]
 
     (log/info (str "Downloading " url "@" sha-short))
 
@@ -57,6 +56,6 @@
                      (log/info (str "Downloading " file " [" module-name "]"))
                      (let [contents (-> (read-repo-file url sha (relative-to subdir file))
                                         (replace-vars vars))]
-                       (spit (io/file build-dir file) contents)))))))
+                       (spit (api.fs/from-submodule-dir group-name module-name file) contents)))))))
 
-      (api.config/write-edn (api.config/from-submodule-dir group-name module-name "module.edn") config))))
+      (api.fs/write-edn (api.fs/from-submodule-dir group-name module-name "module.edn") config))))

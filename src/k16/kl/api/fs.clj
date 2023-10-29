@@ -32,9 +32,6 @@
 (defn from-submodule-dir ^java.io.File [group-name module-name & segments]
   (from-submodule-work-dir group-name ".modules" (name module-name) (flatten segments)))
 
-(defn from-submodule-build-dir ^java.io.File [group-name module-name & segments]
-  (from-submodule-dir group-name module-name "build" segments))
-
 (defn read-edn [^java.io.File file]
   (try
     (edn/read-string (slurp file))
