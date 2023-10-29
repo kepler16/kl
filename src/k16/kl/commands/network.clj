@@ -1,50 +1,62 @@
 (ns k16.kl.commands.network
   (:require
-   [babashka.process :as proc]
-   [clojure.java.io :as io]))
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [k16.kl.api.executor :as api.executor]
+   [k16.kl.api.fs :as api.fs]
+   [k16.kl.api.proxy :as api.proxy]))
 
 (defn- gen-hash [n]
   (->> (repeatedly n #(rand-int 256))
        (map #(format "%02x" %))
        (apply str)))
 
+(defn- get-tmp-dir []
+  (io/file (System/getProperty "java.io.tmpdir") (str "kl-network-" (gen-hash 5))))
+
 (defn- rm-dir [^java.io.File file]
   (when (.isDirectory file)
     (run! rm-dir (.listFiles file)))
   (io/delete-file file))
 
-(defn- prepare-config []
-  (let [dir (io/file (System/getProperty "java.io.tmpdir") (str "kl-network" (gen-hash 5)))
-        files ["config/dnsmasq-internal.conf" "config/dnsmasq-external.conf"
-               "images/Dockerfile.dnsmasq-external" "images/Dockerfile.dnsmasq-internal"
-               "network.yml"]]
+(defn- write-network-module []
+  (let [prefix ".kl/network"
+        module-file (io/resource "network-module/module.edn")
+        module-raw (-> module-file
+                       slurp
+                       (str/replace "{{DIR}}" (.toString (api.fs/from-config-dir prefix))))
+        module (edn/read-string module-raw)]
 
-    (->> files
-         (map (fn [file]
-                (let [source (io/resource file)
-                      sink (io/file dir file)]
-                  (io/make-parents sink)
-                  (spit sink (slurp source)))))
-         dorun)
+    (spit (api.fs/from-config-dir prefix "module.edn") module-raw)
 
-    dir))
+    (doseq [file (:include module)]
+      (let [contents (slurp (io/resource (str "network-module/" file)))]
+        (spit (api.fs/from-config-dir prefix file) contents)))
+
+    module))
 
 (defn- start-network! [_]
-  (let [dir (prepare-config)]
-    (proc/shell ["docker" "compose"
-                 "-p" "kl"
-                 "-f" (.toString (io/file dir "network.yml"))
-                 "up" "-d" "--remove-orphans"])
-
-    (rm-dir dir)))
+  (let [workdir (get-tmp-dir)
+        module (write-network-module)]
+    (api.proxy/write-proxy-config! {:module-name "kl"
+                                    :module module})
+    (api.executor/run-module-containers! {:module module
+                                          :direction :up
+                                          :project-name "kl"
+                                          :workdir workdir})
+    (rm-dir workdir)))
 
 (defn- stop-network! [_]
-  (let [dir (prepare-config)]
-    (proc/shell ["docker" "compose"
-                 "-p" "kl"
-                 "-f" (.toString (io/file dir "network.yml"))
-                 "stop"])
-    (rm-dir dir)))
+  (let [workdir (get-tmp-dir)
+        module (write-network-module)]
+    (api.proxy/write-proxy-config! {:module-name "kl"
+                                    :module {}})
+    (api.executor/run-module-containers! {:module module
+                                          :direction :down
+                                          :project-name "kl"
+                                          :workdir workdir})
+    (rm-dir workdir)))
 
 (def cmd
   {:command "network"

@@ -75,8 +75,9 @@
              (let [module (metamerge/meta-merge module updated-state)]
                (api.proxy/write-proxy-config! {:module-name module-name
                                                :module module})
-               (api.executor/start-configuration! {:module-name module-name
-                                                   :module module}))))})
+               (api.executor/run-module! {:module-name module-name
+                                          :module module
+                                          :direction :up}))))})
 
 (def ^:private stop-cmd
   {:command "down"
@@ -90,8 +91,9 @@
            (let [module-name (prompt.config/get-module-name props)
                  {:keys [modules]} (api.resolver/pull! module-name {})
                  module (api.module/get-resolved-module module-name modules)]
-             (api.executor/stop-configuration! {:module-name module-name
-                                                :module module})))})
+             (api.executor/run-module! {:module-name module-name
+                                        :module module
+                                        :direction :down})))})
 
 (def cmd
   {:command "containers"
