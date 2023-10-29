@@ -2,7 +2,6 @@
   (:require
    [clojure.pprint :as pprint]
    [k16.kl.api.executor :as api.executor]
-   [k16.kl.api.fs :as api.fs]
    [k16.kl.api.module :as api.module]
    [k16.kl.api.proxy :as api.proxy]
    [k16.kl.api.resolver :as api.resolver]
