@@ -19,15 +19,16 @@
   (let [res (proc/sh (str/split "git describe --abbrev=0 --tags" #" "))]
     (str/replace (str/trim (:out res)) #"v" "")))
 
+(def version-cmd
+  {:command "version"
+   :description "Print the current CLI version"
+   :runs (fn [_] (log/info (version)))})
+
 (def cli-configuration
   {:command "kl"
    :description "A CLI for running remotely defined services"
    :version (version)
-   :subcommands [{:command "version"
-                  :description "Print the current CLI version"
-                  :runs (fn [_]
-                          (log/info (version)))}
-
+   :subcommands [version-cmd
                  cmd.modules/cmd
                  cmd.network/cmd
                  cmd.resolver/cmd
