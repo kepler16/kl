@@ -51,34 +51,12 @@ flowchart TD
 
 ## Proxy Configuration
 
-The Traefik Proxy is configured with the `docker` and `file` providers. The `file` provider is configured to watch the mounted directory `~/.config/kl/proxy` which can be used by users and tools to configure arbitrary proxy endpoints. It is recommended to read up on [Traefik Proxy](https://doc.traefik.io/traefik/) to get an overall understanding of how the proxy works and how to configure it. For the lazy, below is a tl;dr of the most common type of configuration.
+The Traefik Proxy is started with the `file` provider and is configured to watch the mounted directory `~/.config/kl/proxy` which can be used by users and tools to configure arbitrary proxy endpoints. It is recommended to read up on [Traefik Proxy](https://doc.traefik.io/traefik/) to get an overall understanding of how the proxy works and how to configure it.
 
-If you are wanting to route traffic to docker containers then you can use labels on the docker container:
 
-```yml
-networks:
-  kl:
-    external: true
+An example proxy configuration would look as follows
 
-services:
-  example:
-    image: tutum/hello-world
-    dns: 172.5.0.100
-    networks:
-    - kl
-    expose: ["80"]
-    labels:
-    - traefik.http.routers.example.rule=Host(`example.test`)
-    # - traefik.http.services.proxy.loadbalancer.example.port=80 # Use this label if there are no `expose`d ports (or if there are more than 1)
-```
-
-Traefik will automatically discover the container and configure itself to proxy `example.test` to port `80` on the container. To specify a different port you can use `traefik.http.services.example.loadbalancer.server.port=1234`.
-
----
-
-To manually configure Traefik to proxy requests to processes running on the host machine, you will need to use the `file` provider. Create or reuse a file in your `~/.config/kl/proxy` directory and add the following config:
-
-```yml
+```yaml
 # ~/.config/kl/proxy/example.yml
 http:
   routers:
@@ -95,7 +73,7 @@ http:
 
 Substituting all occurrences of `example` with the service name (i.e. `example`) and `8080` with whatever port the process is bound to on your host.
 
-> Note that because the Traefik proxy is running in the docker network, you need to refer to your host machine as `host.docker.internal` instead of the normal `localhost` or `127.0.0.1`.
+> Note that because the Traefik proxy is running in the docker network you need to refer to your host machine as `host.docker.internal` instead of the normal `localhost` or `127.0.0.1`.
 
 Traefik will automatically detect the file change and reconfigure itself.
 
@@ -103,4 +81,4 @@ You can access `http://proxy.test` to see all configured routing rules.
 
 ---
 
-It is recommended however to use the `kl proxy` subcommands for managing host machine proxy configurations. It removes the overhead of having to edit this file manually and has a mechanism for disabling/enabling proxy configurations without having to keep deleting/readding them.
+It is recommended to use [modules](../README.md#modules) and the networking components exposed there instead of manually writing proxy configurations.
