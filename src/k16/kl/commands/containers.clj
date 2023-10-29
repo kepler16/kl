@@ -1,5 +1,6 @@
-(ns k16.kl.commands.container
+(ns k16.kl.commands.containers
   (:require
+   [clojure.pprint :as pprint]
    [k16.kl.api.executor :as api.executor]
    [k16.kl.api.fs :as api.fs]
    [k16.kl.api.module :as api.module]
@@ -7,7 +8,6 @@
    [k16.kl.api.resolver :as api.resolver]
    [k16.kl.api.state :as api.state]
    [k16.kl.prompt.config :as prompt.config]
-   [clojure.pprint :as pprint]
    [meta-merge.core :as metamerge]
    [pretty.cli.prompt :as prompt]))
 

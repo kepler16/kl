@@ -1,8 +1,8 @@
-(ns k16.kl.commands.module
+(ns k16.kl.commands.modules
   (:require
+   [k16.kl.api.fs :as api.fs]
    [k16.kl.api.resolver :as api.resolver]
-   [k16.kl.prompt.config :as prompt.config]
-   [k16.kl.api.fs :as api.fs]))
+   [k16.kl.prompt.config :as prompt.config]))
 
 (set! *warn-on-reflection* true)
 

@@ -2,8 +2,8 @@
   (:require
    [clj-yaml.core :as yaml]
    [clojure.java.io :as io]
-   [meta-merge.core :as metamerge]
-   [k16.kdev.api.fs :as api.fs]))
+   [k16.kl.api.fs :as api.fs]
+   [meta-merge.core :as metamerge]))
 
 (defn- get-proxies-projection-file [group-name]
   (api.fs/from-config-dir "proxy/" group-name ".yaml"))

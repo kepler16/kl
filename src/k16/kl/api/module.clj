@@ -1,8 +1,8 @@
 (ns k16.kl.api.module
   (:require
    [k16.kl.api.fs :as api.fs]
-   [meta-merge.core :as metamerge]
-   [k16.kl.api.state :as api.state]))
+   [k16.kl.api.state :as api.state]
+   [meta-merge.core :as metamerge]))
 
 (set! *warn-on-reflection* true)
 
@@ -11,7 +11,7 @@
         merged
         (->> sub-modules
              (reduce (fn [acc [module-name]]
-                       (let [module-file (api.fs/from-module-dir group-name module-name "module.edn")
+                       (let [module-file (api.fs/from-submodule-dir group-name module-name "module.edn")
                              module (api.fs/read-edn module-file)]
                          (metamerge/meta-merge acc module)))
                      {}))]

@@ -3,7 +3,7 @@
    [k16.kl.api.fs :as api.fs]))
 
 (defn get-state-file [group-name]
-  (api.fs/from-work-dir group-name "state.edn"))
+  (api.fs/from-submodule-work-dir group-name "state.edn"))
 
 (defn get-state [group-name]
   (api.fs/read-edn (get-state-file group-name)))

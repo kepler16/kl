@@ -12,23 +12,28 @@
     (io/make-parents file)
     file))
 
+(defn from-modules-dir ^java.io.File [& segments]
+  (let [file (from-config-dir "modules" (flatten segments))]
+    (io/make-parents file)
+    file))
+
 (defn get-config-file ^java.io.File []
   (from-config-dir "config.edn"))
 
 (defn get-root-module-file ^java.io.File [group-name]
-  (from-config-dir group-name "module.edn"))
+  (from-modules-dir group-name "module.edn"))
 
 (defn get-lock-file ^java.io.File [group-name]
-  (from-config-dir group-name "module.lock.edn"))
+  (from-modules-dir group-name "module.lock.edn"))
 
-(defn from-work-dir ^java.io.File [group-name & segments]
-  (from-config-dir group-name ".kl" (flatten segments)))
+(defn from-submodule-work-dir ^java.io.File [group-name & segments]
+  (from-modules-dir group-name ".kl" (flatten segments)))
 
-(defn from-module-dir ^java.io.File [group-name module-name & segments]
-  (from-work-dir group-name ".modules" (name module-name) (flatten segments)))
+(defn from-submodule-dir ^java.io.File [group-name module-name & segments]
+  (from-submodule-work-dir group-name ".modules" (name module-name) (flatten segments)))
 
-(defn from-module-build-dir ^java.io.File [group-name module-name & segments]
-  (from-module-dir group-name module-name "build" segments))
+(defn from-submodule-build-dir ^java.io.File [group-name module-name & segments]
+  (from-submodule-dir group-name module-name "build" segments))
 
 (defn read-edn [^java.io.File file]
   (try
@@ -40,7 +45,7 @@
     (spit file contents)))
 
 (defn list-configuration-groups []
-  (let [dir (from-config-dir)]
+  (let [dir (from-modules-dir)]
     (->> (.listFiles dir)
          (filter (fn [^java.io.File file]
                    (.isDirectory file)))

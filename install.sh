@@ -76,10 +76,10 @@ if [[ "$download_dir" != "$install_dir" ]]
 then
   mkdir -p "$install_dir"
   if [ -f "$install_dir/$repo" ]; then
-    echo "Moving $install_dir/kdev to $install_dir/kdev.old"
-    mv -f "$install_dir/kdev" "$install_dir/kdev.old"
+    echo "Moving $install_dir/kl to $install_dir/kl.old"
+    mv -f "$install_dir/kl" "$install_dir/kl.old"
   fi
-  mv -f "$download_dir/kdev" "$install_dir/kdev"
+  mv -f "$download_dir/kl" "$install_dir/kl"
 fi
 
 echo "Successfully installed $repo in $install_dir"

@@ -33,10 +33,10 @@
 
 (defn download-remote-module! [{:keys [group-name module-name module]}]
   (let [{:keys [sha url subdir]
-         :or {subdir ".kdev"}} module
+         :or {subdir ".kl"}} module
         sha-short (subs sha 0 7)
 
-        build-dir (-> (api.config/from-module-build-dir group-name module-name)
+        build-dir (-> (api.config/from-submodule-build-dir group-name module-name)
                       .toString)
 
         vars {:SHA sha
@@ -58,4 +58,4 @@
                                         (replace-vars vars))]
                        (spit (io/file build-dir file) contents)))))))
 
-      (api.config/write-edn (api.config/from-module-dir group-name module-name "module.edn") config))))
+      (api.config/write-edn (api.config/from-submodule-dir group-name module-name "module.edn") config))))
