@@ -8,10 +8,10 @@ native-image:
   $GRAALVM_HOME/bin/native-image \
     -jar target/kl.jar \
     --no-fallback \
-    --enable-preview \
     --features=clj_easy.graal_build_time.InitClojureClasses \
     -H:Name=target/kl \
     -H:ReflectionConfigurationFiles=./graal/reflect-config.json \
+    -H:ResourceConfigurationFiles=./graal/resources.json \
     -H:+ReportUnsupportedElementsAtRuntime \
     -H:+ReportExceptionStackTraces
 

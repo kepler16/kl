@@ -31,31 +31,20 @@
 
 (defn- start-network! [_]
   (let [dir (prepare-config)]
-
-    (println "Starting network")
-
     (proc/shell ["docker" "compose"
                  "-p" "kl"
                  "-f" (.toString (io/file dir "network.yml"))
                  "up" "-d" "--remove-orphans"])
 
-    (rm-dir dir)
-
-    (println "Network started")))
+    (rm-dir dir)))
 
 (defn- stop-network! [_]
   (let [dir (prepare-config)]
-
-    (println "Stopping network")
-
     (proc/shell ["docker" "compose"
                  "-p" "kl"
                  "-f" (.toString (io/file dir "network.yml"))
                  "stop"])
-
-    (rm-dir dir)
-
-    (println "Network stopped")))
+    (rm-dir dir)))
 
 (def cmd
   {:command "network"
