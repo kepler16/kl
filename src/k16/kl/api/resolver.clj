@@ -22,9 +22,7 @@
 
     (:sha data)))
 
-(defn- resolve-module-ref [{:keys [url sha ref subdir]
-                            :or {ref "master"}}]
-
+(defn- resolve-module-ref [{:keys [url sha ref subdir]}]
   (when-not sha
     (log/info (str "Resolving " url (if subdir (str "/" subdir) ""))))
 
@@ -46,11 +44,17 @@
            (let [lock-entry (get lock submodule-name)
                  current-reference (:ref lock-entry)
 
+                 ref (when (and (not (:sha partial-ref))
+                                (not (:ref partial-ref)))
+                       "master")
+                 partial-ref (cond-> partial-ref
+                               ref (assoc :ref ref))
+
                  should-resolve?
                  (or (not (:sha current-reference))
 
                      (and (:sha partial-ref) (not= (:sha partial-ref) (:sha current-reference)))
-                     (and (or (:ref partial-ref) "master") (not= (:ref partial-ref) (:ref current-reference)))
+                     (and (:ref partial-ref) (not= (:ref partial-ref) (:ref current-reference)))
                      (and (:subdir partial-ref) (not= (:subdir partial-ref) (:subdir current-reference)))
 
                      force-resolve?)]
