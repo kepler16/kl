@@ -31,9 +31,17 @@
                  (str/replace acc (str "{{" (name key) "}}") value))
                contents)))
 
-(defn download-remote-module! [{:keys [module-name submodule-name module]}]
+(defn download-module-config
+  ([module-ref] (download-module-config module-ref {}))
+  ([{:keys [url sha subdir] :or {subdir ".kl"}} vars]
+   (-> (read-repo-file url sha (relative-to subdir "module.edn"))
+       (replace-vars vars)
+       edn/read-string)))
+
+(defn download-remote-module! [{:keys [module-name submodule-name module-ref]}]
   (let [{:keys [sha url subdir]
-         :or {subdir ".kl"}} module
+         :or {subdir ".kl"}} module-ref
+
         sha-short (subs sha 0 7)
 
         submodule-dir (-> (api.fs/from-submodule-dir module-name submodule-name)
@@ -45,12 +53,9 @@
 
     (log/info (str "Downloading " url "@" sha-short))
 
-    (let [config (-> (read-repo-file url sha (relative-to subdir "module.edn"))
-                     (replace-vars vars)
-                     edn/read-string)]
-
+    (let [module (download-module-config module-ref vars)]
       @(p/all
-        (->> (:include config)
+        (->> (:include module)
              (map (fn [file]
                     (p/vthread
                      (log/info (str "Downloading " file " [" submodule-name "]"))
@@ -58,4 +63,4 @@
                                         (replace-vars vars))]
                        (spit (api.fs/from-submodule-dir module-name submodule-name file) contents)))))))
 
-      (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.edn") config))))
+      (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.edn") module))))

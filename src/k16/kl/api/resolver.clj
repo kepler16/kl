@@ -22,7 +22,7 @@
 
     (:sha data)))
 
-(defn- resolve-module-sha [{:keys [url sha ref subdir]
+(defn- resolve-module-ref [{:keys [url sha ref subdir]
                             :or {ref "master"}}]
 
   (when-not sha
@@ -32,54 +32,97 @@
     (cond-> {:url url :sha sha :ref ref}
       subdir (assoc :subdir subdir))))
 
-(defn- resolve-modules [{:keys [module lock force-resolve?]}]
+(defn- resolve-module [partial-reference]
+  (let [module-ref (resolve-module-ref partial-reference)
+        module (resolver.downloader/download-module-config module-ref)]
+    {:ref module-ref
+     :module module}))
+
+(defn- resolve-modules-tree [{:keys [module lock force-resolve?] :as props}]
   (->> (:modules module)
-       (map (fn [[submodule-name location]]
-              (p/vthread
-               (let [lock-entry (get lock submodule-name)
+       (map
+        (fn [[submodule-name partial-ref]]
+          (p/vthread
+           (let [lock-entry (get lock submodule-name)
+                 current-reference (:ref lock-entry)
 
-                     should-resolve?
-                     (or (not (:sha lock-entry))
+                 should-resolve?
+                 (or (not (:sha current-reference))
 
-                         (and (:sha location) (not= (:sha location) (:sha lock-entry)))
-                         (and (:ref location) (not= (:ref location) (:ref lock-entry)))
-                         (and (:subdir location) (not= (:subdir location) (:subdir lock-entry)))
+                     (and (:sha partial-ref) (not= (:sha partial-ref) (:sha current-reference)))
+                     (and (or (:ref partial-ref) "master") (not= (:ref partial-ref) (:ref current-reference)))
+                     (and (:subdir partial-ref) (not= (:subdir partial-ref) (:subdir current-reference)))
 
-                         force-resolve?)]
-                 (if should-resolve?
-                   [submodule-name (resolve-module-sha location)]
-                   [submodule-name lock-entry])))))
-       doall
-       (map (fn [promise] @promise))
+                     force-resolve?)]
+
+             (if should-resolve?
+               (let [{:keys [module ref]} (resolve-module partial-ref)
+                     submodules (resolve-modules-tree (assoc props :module module))]
+                 [submodule-name {:ref ref :module module :submodules submodules}])
+               [submodule-name lock-entry])))))
+       p/all
+       deref
        (into {})))
+
+(defn- deduplicate-tree [{:keys [tree result]
+                          :or {result {}}}]
+  (->> tree
+       (reduce
+        (fn [result [module-name entry]]
+          (if-not (contains? result module-name)
+            (deduplicate-tree
+             {:tree (:submodules entry)
+              :result (assoc result module-name entry)})
+            result))
+        result)))
+
+(defn- tree->lock [tree]
+  (->> tree
+       (reduce
+        (fn [lock [module-name entry]]
+          (assoc lock module-name
+                 {:ref (:ref entry)
+                  :submodules (tree->lock (:submodules entry))}))
+        {})))
+
+(defn- tree->modules [tree]
+  (->> tree
+       (reduce
+        (fn [lock [module-name entry]]
+          (assoc lock module-name (:ref entry)))
+        {})))
+
+(defn- resolve-modules [props]
+  (let [tree (resolve-modules-tree props)
+        tree' (deduplicate-tree {:tree tree})]
+    {:lock (tree->lock tree')
+     :modules (tree->modules tree')}))
 
 (defn pull! [module-name {:keys [update-lockfile? force?]}]
   (let [module (api.fs/read-edn (api.fs/get-root-module-file module-name))
-        lock (api.fs/read-edn (api.fs/get-lock-file module-name))
+        current-lock (api.fs/read-edn (api.fs/get-lock-file module-name))
 
-        modules (resolve-modules {:module module
-                                  :lock lock
-                                  :force-resolve? update-lockfile?})
+        {:keys [lock modules]}
+        (resolve-modules {:module module
+                          :lock current-lock
+                          :force-resolve? update-lockfile?})
 
-        lockfile-updated? (not= modules lock)
-
-        downloads (when (or lockfile-updated? force?)
-                    (->> modules
-                         (map (fn [[submodule-name module]]
-                                (p/vthread
-                                 (resolver.downloader/download-remote-module!
-                                  {:module-name module-name
-                                   :submodule-name (name submodule-name)
-                                   :module module}))))
-
-                         doall))]
+        lockfile-updated? (not= lock current-lock)]
 
     (when lockfile-updated?
-      (api.fs/write-edn (api.fs/get-lock-file module-name) modules))
+      (api.fs/write-edn (api.fs/get-lock-file module-name) lock))
 
-    (when downloads
-      (doseq [download downloads]
-        @download))
+    (when (or lockfile-updated? force?)
+      (->> modules
+           (map (fn [[submodule-name module-ref]]
+                  (p/vthread
+                   (resolver.downloader/download-remote-module!
+                    {:module-name module-name
+                     :submodule-name (name submodule-name)
+                     :module-ref module-ref}))))
+
+           p/all
+           deref))
 
     {:modules modules
      :lockfile-updated? lockfile-updated?}))
