@@ -20,7 +20,7 @@
                                   {:name (name route-name)
                                    :enabled (get-in state [:network :routes route-name :enabled] true)}))))]
 
-    (pprint/print-table [:name :host :prefix :service :endpoint :enabled] routes)))
+    (pprint/print-table [:name :host :path-prefix :service :endpoint :enabled] routes)))
 
 (def cmd
   {:command "routes"
