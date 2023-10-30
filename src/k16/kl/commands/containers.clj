@@ -32,7 +32,8 @@
                                  (map (fn [[container-name container]]
                                         (merge container
                                                {:name (name container-name)
-                                                :enabled (get-in state [:containers container-name :enabled] true)}))))]
+                                                :enabled (get-in state [:containers container-name :enabled]
+                                                                 (get-in module [:containers container-name :enabled] true))}))))]
 
              (pprint/print-table [:name :enabled] containers)))})
 
