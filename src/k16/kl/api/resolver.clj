@@ -36,7 +36,7 @@
     {:ref module-ref
      :module module}))
 
-(defn- resolve-modules-tree [{:keys [module lock force-resolve?] :as props}]
+(defn- resolve-module-tree [{:keys [module lock force-resolve?] :as props}]
   (->> (:modules module)
        (map
         (fn [[submodule-name partial-ref]]
@@ -61,24 +61,33 @@
 
              (if should-resolve?
                (let [{:keys [module ref]} (resolve-module partial-ref)
-                     submodules (resolve-modules-tree (assoc props :module module))]
+                     submodules (resolve-module-tree (assoc props :module module))]
                  [submodule-name {:ref ref :module module :submodules submodules}])
                [submodule-name lock-entry])))))
        p/all
        deref
        (into {})))
 
-(defn- deduplicate-tree [{:keys [tree result]
-                          :or {result {}}}]
-  (->> tree
-       (reduce
-        (fn [result [module-name entry]]
-          (if-not (contains? result module-name)
-            (deduplicate-tree
-             {:tree (:submodules entry)
-              :result (assoc result module-name entry)})
-            result))
-        result)))
+(defn- flatten-modules-tree [{:keys [tree result]
+                              :or {result {}}}]
+  (let [[prewalk-result postwalk-modules]
+        (->> tree
+             (reduce
+              (fn [[result modules] [module-name entry]]
+                (if-not (contains? result module-name)
+                  [(assoc result module-name entry)
+                   (conj modules entry)]
+
+                  [result modules]))
+              [result []]))]
+
+    (->> postwalk-modules
+         (reduce (fn [result entry]
+                   (if (:submodules entry)
+                     (flatten-modules-tree {:tree (:submodules entry)
+                                            :result result})
+                     result))
+                 prewalk-result))))
 
 (defn- tree->lock [tree]
   (->> tree
@@ -97,8 +106,8 @@
         {})))
 
 (defn- resolve-modules [props]
-  (let [tree (resolve-modules-tree props)
-        tree' (deduplicate-tree {:tree tree})]
+  (let [tree (resolve-module-tree props)
+        tree' (flatten-modules-tree {:tree tree})]
     {:lock (tree->lock tree')
      :modules (tree->modules tree')}))
 
