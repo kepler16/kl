@@ -12,7 +12,7 @@
                         :config [{:subnet "172.5.0.0/24"}]}}}
 
  :containers
- {:dnsmasq-external
+ {:dnsmasq-external ^:replace
   {:image "andyshinn/dnsmasq"
    :volumes ["{{DIR}}/config/dnsmasq-external.conf:/dnsmasq-config/dnsmasq.conf"]
    :platform "linux/amd64"
@@ -24,9 +24,10 @@
              "--log-facility=-"]
    :ports ["53:53/udp"
            "53:53/tcp"]
+   :networks ["kl"]
    :cap_add ["NET_ADMIN"]}
 
-  :dnsmasq-internal
+  :dnsmasq-internal ^:replace
   {:image "andyshinn/dnsmasq"
    :volumes ["{{DIR}}/config/dnsmasq-internal.conf:/dnsmasq-config/dnsmasq.conf"]
    :platform "linux/amd64"
@@ -38,7 +39,7 @@
              "--log-facility=-"]
    :networks {:kl {:ipv4_address "172.5.0.100"}}}
 
-  :proxy
+  :proxy ^:replace
   {:image "traefik:v2.6"
    :restart "unless-stopped"
    :networks {:kl {:ipv4_address "172.5.0.101"}}
