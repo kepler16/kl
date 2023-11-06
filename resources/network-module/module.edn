@@ -1,8 +1,5 @@
 {:include ["config/dnsmasq-external.conf"
-           "config/dnsmasq-internal.conf"
-
-           "images/Dockerfile.dnsmasq-external"
-           "images/Dockerfile.dnsmasq-internal"]
+           "config/dnsmasq-internal.conf"]
 
  :network {:services {:kl-proxy {:endpoints {:container {:url "http://proxy:8080"}}
                                  :default-endpoint :container}}
@@ -16,8 +13,8 @@
 
  :containers
  {:dnsmasq-external
-  {:build {:context "{{DIR}}"
-           :dockerfile "{{DIR}}/images/Dockerfile.dnsmasq-external"}
+  {:image "andyshinn/dnsmasq"
+   :volumes ["{{DIR}}/config/dnsmasq-external.conf:/dnsmasq-config/dnsmasq.conf"]
    :platform "linux/amd64"
    :restart "unless-stopped"
    :command ["--conf-file=/dnsmasq-config/dnsmasq.conf"
@@ -30,8 +27,8 @@
    :cap_add ["NET_ADMIN"]}
 
   :dnsmasq-internal
-  {:build {:context "."
-           :dockerfile "{{DIR}}/images/Dockerfile.dnsmasq-internal"}
+  {:image "andyshinn/dnsmasq"
+   :volumes ["{{DIR}}/config/dnsmasq-internal.conf:/dnsmasq-config/dnsmasq.conf"]
    :platform "linux/amd64"
    :restart "unless-stopped"
    :command ["--conf-file=/dnsmasq-config/dnsmasq.conf"
@@ -39,8 +36,7 @@
              "--bind-interfaces"
              "--log-queries"
              "--log-facility=-"]
-   :networks {:kl {:ipv4_address "172.5.0.100"}}
-   :cap_add ["NET_ADMIN"]}
+   :networks {:kl {:ipv4_address "172.5.0.100"}}}
 
   :proxy
   {:image "traefik:v2.6"
@@ -49,6 +45,5 @@
    :command ["--api.insecure=true"
              "--providers.file.directory=/proxy-config"
              "--providers.file.watch=true"]
-   :ports ["80:80"
-           "1001:8080"]
+   :ports ["80:80"]
    :volumes ["~/.config/kl/proxy:/proxy-config"]}}}

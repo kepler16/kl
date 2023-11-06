@@ -1,2 +1,0 @@
-FROM andyshinn/dnsmasq
-COPY ./config/dnsmasq-internal.conf /dnsmasq-config/dnsmasq.conf
