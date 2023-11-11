@@ -9,9 +9,9 @@
 
 (defn- pull! [{:keys [update] :as props}]
   (let [module-name (prompt.config/get-module-name props)
-        updated? (api.resolver/pull! module-name {:update-lockfile? update})]
-    (if updated?
-      (log/info "Services updated")
+        {:keys [lockfile-updated?]} (api.resolver/pull! module-name {:update-lockfile? update})]
+    (if lockfile-updated?
+      (log/info "@|bold Services updated|@")
       (log/info "Services are all up to date"))))
 
 (defn- set-default-module! [props]

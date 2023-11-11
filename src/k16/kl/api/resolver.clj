@@ -25,7 +25,7 @@
 
 (defn- resolve-module-ref [{:keys [url sha ref subdir]}]
   (when-not sha
-    (log/info (str "Resolving " url (if subdir (str "/" subdir) ""))))
+    (log/debug (str "Resolving " url (if subdir (str "/" subdir) ""))))
 
   (let [sha (if sha sha (get-commit-for-ref url ref))]
     (cond-> {:url url :sha sha :ref ref}
@@ -152,9 +152,10 @@
 
       (println)
       (doseq [[submodule-name {:keys [ref previous-ref]}] updated-modules]
-        (log/info (str "Module " (name submodule-name)
-                       " updated from "
-                       (subs (:sha previous-ref) 0 7) " -> " (subs (:sha ref) 0 7))))
+        (let [module-name (str "@|yellow " (name submodule-name) "|@@|white @|@")
+              from (subs (:sha previous-ref) 0 7)
+              to (subs (:sha ref) 0 7)]
+          (log/info (str module-name "@|bold,red " from "|@ => " module-name "@|bold,green " to "|@"))))
       (println))
 
     {:modules modules

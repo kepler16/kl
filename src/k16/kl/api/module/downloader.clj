@@ -21,7 +21,7 @@
                                  :headers {"Accept" "application/vnd.github.raw"}})]
 
     (when (not= 200 (:status res))
-      (log/info (str "Failed to pull " identifier "@" sha "/" path))
+      (log/error (str "Failed to pull " identifier "@" sha "/" path))
       (cli.util/exit! (:body res) 1))
 
     (slurp (:body res))))
@@ -31,7 +31,7 @@
                                  :headers {"Accept" "application/vnd.github.raw"}})]
 
     (when (not= 200 (:status res))
-      (log/info (str "Failed to list files in " identifier "@" sha "/" path))
+      (log/error (str "Failed to list files in " identifier "@" sha "/" path))
       (cli.util/exit! (:body res) 1))
 
     (json/read-value (:body res) json/keyword-keys-object-mapper)))
@@ -71,14 +71,14 @@
               :SHA_SHORT sha-short
               :DIR submodule-dir}]
 
-    (log/info (str "Downloading " url "@" sha-short))
+    (log/debug (str "Pulling module " url "@@|cyan " sha-short "|@"))
 
     (let [module (download-module-config module-ref vars)]
       @(p/all
         (->> (:include module)
              (map (fn [file]
                     (p/vthread
-                     (log/info (str "Downloading " file " [" submodule-name "]"))
+                     (log/debug (str "Downloading " file " from " submodule-name))
                      (let [contents (->> (read-repo-file url sha (relative-to subdir file))
                                          (replace-vars vars))]
                        (spit (api.fs/from-submodule-dir module-name submodule-name file) contents)))))))

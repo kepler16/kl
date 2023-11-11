@@ -1,13 +1,12 @@
 (ns k16.kl.commands.resolver
   (:require
-   [clojure.string :as str]
-   [k16.kl.log :as log]))
+   [clojure.string :as str]))
 
 (defn- setup-macos-resolver []
-  (log/info "sudo mkdir -p /etc/resolver\necho 'nameserver 127.0.0.1' | sudo tee -a /etc/resolver/test > /dev/null"))
+  (println "sudo mkdir -p /etc/resolver\necho 'nameserver 127.0.0.1' | sudo tee -a /etc/resolver/test > /dev/null"))
 
 (defn- setup-linux-resolver []
-  (log/info "(echo 'nameserver 127.0.0.1'; sudo cat /etc/resolv.conf) | sudo tee -a /etc/resolv.conf > /dev/null"))
+  (println "(echo 'nameserver 127.0.0.1'; sudo cat /etc/resolv.conf) | sudo tee -a /etc/resolv.conf > /dev/null"))
 
 (defn- setup-resolver! [_]
   (let [os (-> (System/getProperty "os.name") .toLowerCase)]

@@ -7,6 +7,7 @@
         metosin/jsonista {:mvn/version "0.3.7"}
         clj-commons/clj-yaml {:mvn/version "1.0.27"}
         babashka/process {:mvn/version "0.5.21"}
+        jansi-clj/jansi-clj {:mvn/version "1.0.1"}
         cli-matic/cli-matic {:mvn/version "0.5.4"}
         org.clojars.civa86/pretty.cli {:mvn/version "1.0.1"}
         funcool/promesa {:mvn/version "11.0.678"}
