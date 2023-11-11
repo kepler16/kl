@@ -4,7 +4,8 @@
    [jsonista.core :as json]
    [k16.kl.api.fs :as api.fs]
    [k16.kl.api.github :as api.github]
-   [k16.kl.api.resolver.downloader :as resolver.downloader]
+   [k16.kl.api.module.loader :as module.loader]
+   [k16.kl.api.module.downloader :as module.downloader]
    [k16.kl.log :as log]
    [promesa.core :as p]))
 
@@ -32,7 +33,7 @@
 
 (defn- resolve-module [partial-reference]
   (let [module-ref (resolve-module-ref partial-reference)
-        module (resolver.downloader/download-module-config module-ref)]
+        module (module.downloader/download-module-config module-ref)]
     {:ref module-ref
      :module module}))
 
@@ -112,7 +113,7 @@
      :modules (tree->modules tree')}))
 
 (defn pull! [module-name {:keys [update-lockfile? force?]}]
-  (let [module (api.fs/read-edn (api.fs/get-root-module-file module-name))
+  (let [module (module.loader/read-module-file (api.fs/get-root-module-file module-name))
         current-lock (api.fs/read-edn (api.fs/get-lock-file module-name))
 
         {:keys [lock modules]}
@@ -129,7 +130,7 @@
       (->> modules
            (map (fn [[submodule-name module-ref]]
                   (p/vthread
-                   (resolver.downloader/download-remote-module!
+                   (module.downloader/download-remote-module!
                     {:module-name module-name
                      :submodule-name (name submodule-name)
                      :module-ref module-ref}))))

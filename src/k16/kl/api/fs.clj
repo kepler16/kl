@@ -19,7 +19,14 @@
   (from-config-dir "config.edn"))
 
 (defn get-root-module-file ^java.io.File [group-name]
-  (from-modules-dir group-name "module.edn"))
+  (let [dir (from-modules-dir group-name)
+        file-name
+        (->> (.listFiles dir)
+             (map (fn [^java.io.File file] (.getName file)))
+             (filter (fn [file-name]
+                       (re-matches #"module\.(edn|yaml|yml|json)" file-name)))
+             first)]
+    (from-modules-dir group-name file-name)))
 
 (defn get-lock-file ^java.io.File [group-name]
   (from-modules-dir group-name "module.lock.edn"))
