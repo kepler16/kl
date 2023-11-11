@@ -73,7 +73,7 @@ These containers are configured to always restart even after exiting/restarting 
 
 A module is the primary unit of configuration in kl and is comprised of [containers](#containers), [services](#services), [endpoints](#endpoints) and [routes](#routes). A module can also contain sub-modules which should reference externally defined module configurations. Sub-modules are recursively resolved and merged into the root module.
 
-A module is a directory located in `~/.config/kl/modules/` that must contain at least a file called `module.edn`. Here is an example of a module:
+A module is a directory located in `~/.config/kl/modules/` that must contain at least a file called `module.(edn|json|yaml|yml)`. Here is an example of a module:
 
 ```clj
 {:modules {:remote-module-name {:url "owner/repo"
