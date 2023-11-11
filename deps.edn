@@ -2,6 +2,7 @@
 
  :paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        metosin/malli {:mvn/version "0.13.0"}
         meta-merge/meta-merge {:mvn/version "1.0.0"}
         metosin/jsonista {:mvn/version "0.3.7"}
         clj-commons/clj-yaml {:mvn/version "1.0.27"}

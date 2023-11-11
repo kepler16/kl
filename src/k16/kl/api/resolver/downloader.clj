@@ -5,6 +5,7 @@
    [clojure.string :as str]
    [k16.kl.api.fs :as api.fs]
    [k16.kl.api.github :as api.github]
+   [k16.kl.api.module.parse :as module.parse]
    [k16.kl.log :as log]
    [promesa.core :as p]))
 
@@ -36,7 +37,8 @@
   ([{:keys [url sha subdir] :or {subdir ".kl"}} vars]
    (-> (read-repo-file url sha (relative-to subdir "module.edn"))
        (replace-vars vars)
-       edn/read-string)))
+       edn/read-string
+       module.parse/parse-module-data)))
 
 (defn download-remote-module! [{:keys [module-name submodule-name module-ref]}]
   (let [{:keys [sha url subdir]
