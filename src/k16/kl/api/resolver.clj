@@ -63,7 +63,7 @@
              (if should-resolve?
                (let [{:keys [module ref]} (resolve-module partial-ref)
                      submodules (resolve-module-tree (assoc props :module module))]
-                 [submodule-name {:ref ref :module module :submodules submodules}])
+                 [submodule-name {:ref ref :module module :submodules submodules :previous-ref (:ref lock-entry)}])
                [submodule-name lock-entry])))))
        p/all
        deref
@@ -102,21 +102,33 @@
 (defn- tree->modules [tree]
   (->> tree
        (reduce
-        (fn [lock [module-name entry]]
-          (assoc lock module-name (:ref entry)))
+        (fn [modules [module-name entry]]
+          (assoc modules module-name (:ref entry)))
+        {})))
+
+(defn- tree->updated-modules [tree]
+  (->> tree
+       (reduce
+        (fn [updates [module-name entry]]
+          (let [{:keys [ref previous-ref]} entry]
+            (if (and previous-ref
+                     (not= (:sha ref) (:sha previous-ref)))
+              (assoc updates module-name entry)
+              updates)))
         {})))
 
 (defn- resolve-modules [props]
   (let [tree (resolve-module-tree props)
-        tree' (flatten-modules-tree {:tree tree})]
-    {:lock (tree->lock tree')
-     :modules (tree->modules tree')}))
+        flattened (flatten-modules-tree {:tree tree})]
+    {:lock (tree->lock flattened)
+     :modules (tree->modules flattened)
+     :updated-modules (tree->updated-modules flattened)}))
 
-(defn pull! [module-name {:keys [update-lockfile? force?]}]
+(defn pull! [module-name {:keys [update-lockfile?]}]
   (let [module (module.loader/read-module-file (api.fs/get-root-module-file module-name))
         current-lock (api.fs/read-edn (api.fs/get-lock-file module-name))
 
-        {:keys [lock modules]}
+        {:keys [lock modules updated-modules]}
         (resolve-modules {:module module
                           :lock current-lock
                           :force-resolve? update-lockfile?})
@@ -126,17 +138,24 @@
     (when lockfile-updated?
       (api.fs/write-edn (api.fs/get-lock-file module-name) lock))
 
-    (when (or lockfile-updated? force?)
-      (->> modules
-           (map (fn [[submodule-name module-ref]]
+    (when (seq updated-modules)
+      (->> updated-modules
+           (map (fn [[submodule-name {:keys [ref]}]]
                   (p/vthread
                    (module.downloader/download-remote-module!
                     {:module-name module-name
                      :submodule-name (name submodule-name)
-                     :module-ref module-ref}))))
+                     :module-ref ref}))))
 
            p/all
-           deref))
+           deref)
+
+      (println)
+      (doseq [[submodule-name {:keys [ref previous-ref]}] updated-modules]
+        (log/info (str "Module " (name submodule-name)
+                       " updated from "
+                       (subs (:sha previous-ref) 0 7) " -> " (subs (:sha ref) 0 7))))
+      (println))
 
     {:modules modules
      :lockfile-updated? lockfile-updated?}))

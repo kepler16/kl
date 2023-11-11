@@ -7,10 +7,9 @@
 
 (set! *warn-on-reflection* true)
 
-(defn- pull! [{:keys [update force] :as props}]
+(defn- pull! [{:keys [update] :as props}]
   (let [module-name (prompt.config/get-module-name props)
-        updated? (api.resolver/pull! module-name {:update-lockfile? update
-                                                  :force? force})]
+        updated? (api.resolver/pull! module-name {:update-lockfile? update})]
     (if updated?
       (log/info "Services updated")
       (log/info "Services are all up to date"))))
@@ -38,10 +37,6 @@
                           :type :string}
 
                          {:option "update"
-                          :default false
-                          :type :with-flag}
-
-                         {:option "force"
                           :default false
                           :type :with-flag}]
 
