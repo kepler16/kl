@@ -1,14 +1,15 @@
 (ns k16.kl.commands.containers
   (:require
+   [cli-matic.utils :as cli.utils]
    [clojure.pprint :as pprint]
    [k16.kl.api.executor :as api.executor]
    [k16.kl.api.module :as api.module]
    [k16.kl.api.proxy :as api.proxy]
    [k16.kl.api.resolver :as api.resolver]
    [k16.kl.api.state :as api.state]
+   [k16.kl.prompt :as prompt]
    [k16.kl.prompt.config :as prompt.config]
-   [meta-merge.core :as metamerge]
-   [pretty.cli.prompt :as prompt]))
+   [meta-merge.core :as metamerge]))
 
 (set! *warn-on-reflection* true)
 
@@ -58,8 +59,12 @@
                                      {:value (name container-name)
                                       :label (name container-name)
                                       :checked (get-in state [:containers container-name :enabled] true)})))
-                 selected-containers (->> options
-                                          (prompt/list-checkbox "Select Services")
+
+                 selection-result (prompt/select-multi "Select Services" options)
+                 _ (when-not selection-result
+                     (cli.utils/exit! "Cancelled" 1))
+
+                 selected-containers (->> selection-result
                                           (map keyword)
                                           set)
 

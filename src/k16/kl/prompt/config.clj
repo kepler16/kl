@@ -1,7 +1,8 @@
 (ns k16.kl.prompt.config
   (:require
    [k16.kl.api.fs :as api.fs]
-   [pretty.cli.prompt :as prompt]))
+   [k16.kl.prompt :as prompt]
+   [cli-matic.utils :as cli.utils]))
 
 (set! *warn-on-reflection* true)
 
@@ -12,5 +13,7 @@
 
       (and default-module (not skip-default?)) default-module
 
-      :else (let [modules (api.fs/list-modules)]
-              (prompt/list-select "Select Module" modules)))))
+      :else (let [modules (api.fs/list-modules)
+                  module-name (prompt/select "Select Module" modules)]
+              (when-not module-name (cli.utils/exit! "No endpoint selected" 1))
+              module-name))))
