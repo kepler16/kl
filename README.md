@@ -10,35 +10,14 @@ KL tries to assume as little as possible about systems being run in order to mak
 
 ### Index
 
-+ [**Concepts**](#concepts)
 + [**Installation**](#installation)
 + [**Network Topology**](./docs/network-topology.md)
-+ [**Modules**](#modules)
-+ [**Services**](#services)
-+ [**Endpoints**](#endpoints)
-+ [**Routes**](#routes)
-
----
-
-## Concepts
-
-#### Networking
-
-The core idea behind KL is to enable identifying services with stable `.test` domains and then having a flexible means of swapping out which endpoint the domain routes traffic to. This is typically how we run our services in production environments, there is no reason not to do it locally too.
-
-One of the main benefits that we draw from this is the significant simplification of service configuration. Services can be configured statically (committed to code/configuration) with the domains of other services they need to communicate with regardless of where those services are running or what their ip:port conbinations are.
-
-These domains are stable across all developers' machines and don't change when a developer needs to alter how or where they are running any particular service.
-
-For an overview of the network topology constructed by kl head over to the [Network Topology](./docs/network-topology.md) document.
-
-#### Containers
-
-While the benefits of the stable network addresses are significant it can also become quite tedious to run ones entire tech stack locally, especially when it is comprised of multiple individual services. Tools like docker-compose help a lot in this regard but even that starts to become very unwieldy as the number of services grow and the rate at which they change increases.
-
-Managing large docker-compose configurations and keeping them up-to-date with changes happening in upstream services does not scale well.
-
-KL provides a mechanism of defining container configurations alongside the services they relate to (in their respective repositories) and composing them together on each developers local machine. Because the configuration lives alongside the service it is simpler to keep in sync as changes are made to the service itself. Developers' can then use kl to pull down any upstream changes to run.
++ [**Concepts**](#concepts)
+  + [**Modules**](#modules)
+  + [**Services**](#services)
+  + [**Endpoints**](#endpoints)
+  + [**Routes**](#routes)
++ [**Prompts**](#Prompts)
 
 ---
 
@@ -68,6 +47,30 @@ kl network start
 ```
 
 These containers are configured to always restart even after exiting/restarting docker.
+
+---
+
+## Concepts
+
+#### Networking
+
+The core idea behind KL is to enable identifying services with stable `.test` domains and then having a flexible means of swapping out which endpoint the domain routes traffic to. This is typically how we run our services in production environments, there is no reason not to do it locally too.
+
+One of the main benefits that we draw from this is the significant simplification of service configuration. Services can be configured statically (committed to code/configuration) with the domains of other services they need to communicate with regardless of where those services are running or what their ip:port conbinations are.
+
+These domains are stable across all developers' machines and don't change when a developer needs to alter how or where they are running any particular service.
+
+For an overview of the network topology constructed by kl head over to the [Network Topology](./docs/network-topology.md) document.
+
+#### Containers
+
+While the benefits of the stable network addresses are significant it can also become quite tedious to run ones entire tech stack locally, especially when it is comprised of multiple individual services. Tools like docker-compose help a lot in this regard but even that starts to become very unwieldy as the number of services grow and the rate at which they change increases.
+
+Managing large docker-compose configurations and keeping them up-to-date with changes happening in upstream services does not scale well.
+
+KL provides a mechanism of defining container configurations alongside the services they relate to (in their respective repositories) and composing them together on each developers local machine. Because the configuration lives alongside the service it is simpler to keep in sync as changes are made to the service itself. Developers' can then use kl to pull down any upstream changes to run.
+
+---
 
 ## Modules
 
@@ -128,3 +131,11 @@ An endpoint is defined as part of a [service](#services) and generally represent
 ## Routes
 
 A route is an HTTP routing rule made up of a combination of `host` and `prefix`. A route points to a [service](#services) and will route to whichever `default-endpoint` is configured on the service. A route may also specify a specific [endpoint](#endpoint) on the service to route through which would override the default endpoint configured on the service.
+
+---
+
+## Prompts
+
+KL has built-in support for [fzf](https://github.com/junegunn/fzf) and [gum](https://github.com/charmbracelet/gum) for prompt interfaces and selections. If these programs are installed and on your `PATH` then they will automatically be used. Alternatively kl will fallback to using a native prompt implementation if neither gum nor fzf can be found.
+
+For a better prompt experience it is highly recommended to have these programs installed on your PATH.
