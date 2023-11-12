@@ -44,7 +44,9 @@
 
         header (str " --header '" title "' ")
         height (str " --height " (+ (count options) 1) " ")
-        preselected (str " --selected " (str/join "," selected) " ")
+        preselected (if (seq selected)
+                      (str " --selected " (str/join "," selected) " ") 
+                      "")
 
         opts {:in input
               :out :string
