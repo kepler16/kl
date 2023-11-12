@@ -84,3 +84,6 @@
                        (spit (api.fs/from-submodule-dir module-name submodule-name file) contents)))))))
 
       (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.edn") module))))
+
+(defn rm-local-module! [{:keys [module-name submodule-name]}]
+  (api.fs/rm-dir! (api.fs/from-submodule-dir module-name submodule-name)))

@@ -46,6 +46,11 @@
   (let [contents (with-out-str (pprint/pprint data))]
     (spit file contents)))
 
+(defn rm-dir! [^java.io.File file]
+  (when (.isDirectory file)
+    (run! rm-dir! (.listFiles file)))
+  (io/delete-file file))
+
 (defn list-modules []
   (let [dir (from-modules-dir)]
     (->> (.listFiles dir)

@@ -63,7 +63,11 @@
              (if should-resolve?
                (let [{:keys [module ref]} (resolve-module partial-ref)
                      submodules (resolve-module-tree (assoc props :module module))]
-                 [submodule-name {:ref ref :module module :submodules submodules :previous-ref (:ref lock-entry)}])
+                 [submodule-name {:ref ref
+                                  :module module
+                                  :submodules submodules
+                                  :changed? true
+                                  :previous-ref (:ref lock-entry)}])
                [submodule-name lock-entry])))))
        p/all
        deref
@@ -106,29 +110,40 @@
           (assoc modules module-name (:ref entry)))
         {})))
 
-(defn- tree->updated-modules [tree]
-  (->> tree
-       (reduce
-        (fn [updates [module-name entry]]
-          (let [{:keys [ref previous-ref]} entry]
-            (if (and previous-ref
-                     (not= (:sha ref) (:sha previous-ref)))
-              (assoc updates module-name entry)
-              updates)))
-        {})))
+(defn- tree->module-diff [tree lock]
+  (let [updated
+        (->> tree
+             (reduce
+              (fn [updates [module-name entry]]
+                (let [{:keys [ref changed? previous-ref]} entry]
+                  (if (and changed?
+                           (not= (:sha ref) (:sha previous-ref)))
+                    (assoc updates module-name entry)
+                    updates)))
+              {}))
+
+        removed
+        (->> lock
+             (reduce (fn [removed [module-name entry]]
+                       (if-not (contains? tree module-name)
+                         (assoc removed module-name (assoc entry :removed? true))
+                         removed))
+                     {}))]
+
+    (merge removed updated)))
 
 (defn- resolve-modules [props]
   (let [tree (resolve-module-tree props)
         flattened (flatten-modules-tree {:tree tree})]
     {:lock (tree->lock flattened)
      :modules (tree->modules flattened)
-     :updated-modules (tree->updated-modules flattened)}))
+     :module-diff (tree->module-diff flattened (:lock props))}))
 
 (defn pull! [module-name {:keys [update-lockfile?]}]
   (let [module (module.loader/read-module-file (api.fs/get-root-module-file module-name))
         current-lock (api.fs/read-edn (api.fs/get-lock-file module-name))
 
-        {:keys [lock modules updated-modules]}
+        {:keys [lock modules module-diff]}
         (resolve-modules {:module module
                           :lock current-lock
                           :force-resolve? update-lockfile?})
@@ -138,24 +153,38 @@
     (when lockfile-updated?
       (api.fs/write-edn (api.fs/get-lock-file module-name) lock))
 
-    (when (seq updated-modules)
-      (->> updated-modules
-           (map (fn [[submodule-name {:keys [ref]}]]
+    (when (seq module-diff)
+      (->> module-diff
+           (map (fn [[submodule-name {:keys [ref removed?]}]]
                   (p/vthread
-                   (module.downloader/download-remote-module!
-                    {:module-name module-name
-                     :submodule-name (name submodule-name)
-                     :module-ref ref}))))
+                   (if removed?
+                     (module.downloader/rm-local-module!
+                      {:module-name module-name
+                       :submodule-name (name submodule-name)})
+
+                     (module.downloader/download-remote-module!
+                      {:module-name module-name
+                       :submodule-name (name submodule-name)
+                       :module-ref ref})))))
 
            p/all
            deref)
 
       (println)
-      (doseq [[submodule-name {:keys [ref previous-ref]}] updated-modules]
+      (doseq [[submodule-name {:keys [ref previous-ref changed? removed?]}] module-diff]
         (let [module-name (str "@|yellow " (name submodule-name) "|@@|white @|@")
-              from (subs (:sha previous-ref) 0 7)
+              from (when previous-ref (subs (:sha previous-ref) 0 7))
               to (subs (:sha ref) 0 7)]
-          (log/info (str module-name "@|bold,red " from "|@ => " module-name "@|bold,green " to "|@"))))
+          (cond
+            (and changed? from)
+            (log/info (str "@|bold,cyan ~|@ " module-name "@|bold,red " from "|@" "@|bold,green " to "|@"))
+
+            removed?
+            (log/info (str "@|bold,red -|@ " module-name "@|bold,red " to "|@"))
+
+            changed?
+            (log/info (str "@|bold,green +|@ " module-name "@|bold,green " to "|@")))))
+
       (println))
 
     {:modules modules

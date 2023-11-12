@@ -15,11 +15,6 @@
 (defn- get-tmp-dir []
   (io/file (System/getProperty "java.io.tmpdir") (str "kl-network-" (gen-hash 5))))
 
-(defn- rm-dir [^java.io.File file]
-  (when (.isDirectory file)
-    (run! rm-dir (.listFiles file)))
-  (io/delete-file file))
-
 (defn- write-network-module []
   (let [prefix ".kl/network"
         module-file (io/resource "network-module/module.edn")
@@ -45,7 +40,7 @@
                                           :direction :up
                                           :project-name "kl"
                                           :workdir workdir})
-    (rm-dir workdir)))
+    (api.fs/rm-dir! workdir)))
 
 (defn- stop-network! [_]
   (let [workdir (get-tmp-dir)
@@ -56,7 +51,7 @@
                                           :direction :down
                                           :project-name "kl"
                                           :workdir workdir})
-    (rm-dir workdir)))
+    (api.fs/rm-dir! workdir)))
 
 (def cmd
   {:command "network"
