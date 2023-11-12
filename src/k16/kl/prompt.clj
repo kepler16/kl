@@ -2,7 +2,6 @@
   (:require
    [babashka.process :as proc]
    [clojure.string :as str]
-   [k16.kl.prompt.proc :as prompt.proc]
    [pretty.cli.prompt :as prompt]))
 
 (set! *warn-on-reflection* true)
@@ -39,28 +38,33 @@
         input
         (->> options
              (map :label)
-             (str/join "\n"))]
+             (str/join "\n"))
+
+        title (str "'" title "'")
+        height (+ (count options) 1)
+
+        opts {:in input
+              :out :string
+              :err :inherit
+              :continue true}]
 
     (if multi-select?
-      (let [command (concat ["gum" "choose" "--header" title]
-                            (map :label options)
-                            ["--no-limit" "--selected" (str/join "," selected)])
+      (let [options (str/join " " (map :label options))
+            preselected (str/join "," selected)
 
-            {:keys [stdout code]}
-            (prompt.proc/shell {:stdin input :cmd command})
+            cmd (str "gum choose --no-limit --header " title " --height " height " --selected " preselected " " options)
+            {:keys [out exit]} (proc/shell opts cmd)]
 
-            results (str/split stdout #"\n")]
-
-        (if (= 0 code)
-          (map (fn [result]
-                 (get indexed result))
-               results)
+        (if (= 0 exit)
+          (->> (str/split out #"\n")
+               (map (fn [result]
+                      (get indexed result))))
           nil))
 
-      (let [command ["gum" "filter"]
-            {:keys [code stdout]} (proc/shell {:stdin input :cmd command})]
-        (if (= 0 code)
-          (get indexed (str/trim stdout))
+      (let [cmd (str "gum filter --header " title " --height " height)
+            {:keys [exit out]} (proc/shell opts cmd)]
+        (if (= 0 exit)
+          (get indexed (str/trim out))
           nil)))))
 
 (defn- select-with-fzf [title options]
@@ -82,11 +86,18 @@
              (map :label)
              (str/join "\n"))
 
-        {:keys [stdout]}
-        (prompt.proc/shell {:cmd ["fzf" "--layout" "reverse" "--header" title "--height" (str (+ 3 (count options)))]
-                            :stdin input})]
+        title (str "'" title "'")
+        height (str (+ (count options) 3))
 
-    (get indexed (str/trim-newline stdout))))
+        cmd (str "fzf --layout reverse --header " title " --height " height)
+        opts {:in input
+              :out :string
+              :err :inherit
+              :continue true}
+
+        {:keys [out]} (proc/shell opts cmd)]
+
+    (get indexed (str/trim-newline out))))
 
 (defn select [title options]
   (cond
