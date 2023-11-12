@@ -40,8 +40,11 @@
              (map :label)
              (str/join "\n"))
 
-        title (str "'" title "'")
-        height (+ (count options) 1)
+        common-style-options ["--header.foreground='#d3869b'"]
+
+        header (str " --header '" title "' ")
+        height (str " --height " (+ (count options) 1) " ")
+        preselected (str " --selected " (str/join "," selected) " ")
 
         opts {:in input
               :out :string
@@ -50,9 +53,13 @@
 
     (if multi-select?
       (let [options (str/join " " (map :label options))
-            preselected (str/join "," selected)
 
-            cmd (str "gum choose --no-limit --header " title " --height " height " --selected " preselected " " options)
+            style-options (concat common-style-options
+                                  ["--cursor.foreground='#b8bb26'"
+                                   "--selected.foreground='#b8bb26'"])
+            style (str " " (str/join " " style-options) " ")
+
+            cmd (str "gum choose --no-limit" style header height preselected options)
             {:keys [out exit]} (proc/shell opts cmd)]
 
         (if (= 0 exit)
@@ -61,7 +68,13 @@
                       (get indexed result))))
           nil))
 
-      (let [cmd (str "gum filter --header " title " --height " height)
+      (let [style-options (concat common-style-options
+                                  ["--match.foreground='#fabd2f'"
+                                   "--prompt.foreground='#b8bb26'"
+                                   "--indicator.foreground='#fabd2f'"
+                                   "--indicator='>'"])
+            style (str " " (str/join " " style-options) " ")
+            cmd (str "gum filter" style header height)
             {:keys [exit out]} (proc/shell opts cmd)]
         (if (= 0 exit)
           (get indexed (str/trim out))
