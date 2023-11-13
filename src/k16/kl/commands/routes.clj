@@ -2,8 +2,10 @@
   (:require
    [clojure.pprint :as pprint]
    [k16.kl.api.module :as api.module]
+   [k16.kl.api.proxy :as api.proxy]
    [k16.kl.api.resolver :as api.resolver]
    [k16.kl.api.state :as api.state]
+   [k16.kl.log :as log]
    [k16.kl.prompt.config :as prompt.config]))
 
 (defn- list-routes [props]
@@ -22,6 +24,17 @@
 
     (pprint/print-table [:name :host :path-prefix :service :endpoint :enabled] routes)))
 
+(defn- apply-routes! [props]
+  (let [module-name (prompt.config/get-module-name props)
+
+        {:keys [modules]} (api.resolver/pull! module-name {})
+        module (api.module/get-resolved-module module-name modules)]
+
+    (api.proxy/write-proxy-config! {:module-name module-name
+                                    :module module})
+
+    (log/info "Routes applied")))
+
 (def cmd
   {:command "routes"
    :description "Manage network routes"
@@ -34,6 +47,15 @@
                           :type :string}]
 
                   :runs list-routes}
+
+                 {:command "apply"
+                  :description "Apply any route changes"
+
+                  :opts [{:option "module"
+                          :short 0
+                          :type :string}]
+
+                  :runs apply-routes!}
 
                  {:command "configure"
                   :description "Select which routes are enabled or disabled"
