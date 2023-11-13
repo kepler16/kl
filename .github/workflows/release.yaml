@@ -78,7 +78,7 @@ jobs:
           path: bin
 
       - name: Calculate checksums
-        runs: |
+        run: |
           for file in bin/*; do
             shasum -a 256 "$file" >> checksums.txt
           done
