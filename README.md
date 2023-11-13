@@ -23,6 +23,14 @@ KL tries to assume as little as possible about systems being run in order to mak
 
 ## Installation
 
+#### Homebrew
+
+```bash
+brew install kepler16/tap/kl
+```
+
+#### Curl
+
 You can use the below script to automatically install the latest release
 
 ```bash
