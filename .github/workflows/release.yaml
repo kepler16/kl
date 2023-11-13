@@ -77,6 +77,14 @@ jobs:
           name: kl-native-images
           path: bin
 
+      - name: Calculate checksums
+        runs: |
+          for file in bin/*; do
+            shasum -a 256 "$file" >> checksums.txt
+          done
+
+          mv checksums.txt bin/checksums.txt
+
       - uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
