@@ -6,6 +6,7 @@
    [k16.kl.api.proxy :as api.proxy]
    [k16.kl.api.resolver :as api.resolver]
    [k16.kl.api.state :as api.state]
+   [k16.kl.log :as log]
    [k16.kl.prompt :as prompt]
    [k16.kl.prompt.config :as prompt.config]
    [meta-merge.core :as metamerge]))
@@ -27,6 +28,7 @@
             keyword)
 
         _ (when-not service-name (cli.utils/exit! "No service selected" 1))
+        _ (log/info (str "Using @|bold " (name service-name) "|@"))
 
         service (get-in module [:network :services service-name])
 
@@ -39,6 +41,7 @@
             keyword)
 
         _ (when-not endpoint-name (cli.utils/exit! "No endpoint selected" 1))
+        _ (log/info (str "Using @|bold " (name endpoint-name) "|@"))
 
         updated-state
         (assoc-in state [:network :services service-name :default-endpoint]
@@ -48,7 +51,9 @@
 
     (let [module (metamerge/meta-merge module updated-state)]
       (api.proxy/write-proxy-config! {:module-name module-name
-                                      :module module}))))
+                                      :module module}))
+
+    (log/info (str "@|green Service default-endpoint has been updated |@"))))
 
 (defn- list-services [props]
   (let [module-name (prompt.config/get-module-name props)
