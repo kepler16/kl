@@ -86,7 +86,7 @@
                                           :direction :up}))))})
 
 (def ^:private stop-cmd
-  {:command "down"
+  {:command "stop"
    :description "Stop all running containers "
 
    :opts [{:option "module"
