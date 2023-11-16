@@ -99,29 +99,29 @@
 
                   :runs apply-routes!}
 
-                 {:command "configure"
-                  :description "Select which routes are enabled or disabled"
+                 #_#_#_{:command "configure"
+                        :description "Select which routes are enabled or disabled"
 
-                  :opts [{:option "module"
-                          :short 0
-                          :type :string}]
+                        :opts [{:option "module"
+                                :short 0
+                                :type :string}]
 
-                  :runs (fn [_])}
+                        :runs (fn [_])}
 
-                 {:command "set-service"
-                  :description "Set the service for a route"
+                     {:command "set-service"
+                      :description "Set the service for a route"
 
-                  :opts [{:option "module"
-                          :short 0
-                          :type :string}]
+                      :opts [{:option "module"
+                              :short 0
+                              :type :string}]
 
-                  :runs (fn [_])}
+                      :runs (fn [_])}
 
-                 {:command "set-endpoint"
-                  :description "Set the endpoint for a route"
+                   {:command "set-endpoint"
+                    :description "Set the endpoint for a route"
 
-                  :opts [{:option "module"
-                          :short 0
-                          :type :string}]
+                    :opts [{:option "module"
+                            :short 0
+                            :type :string}]
 
-                  :runs (fn [_])}]})
+                    :runs (fn [_])}]})
