@@ -42,6 +42,12 @@
                  (str/replace acc (str "{{" (name key) "}}") value))
                contents)))
 
+(defn- save-module-ref [module-name submodule-name ref]
+  (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.ref.edn") ref))
+
+(defn- load-module-ref [module-name submodule-name]
+  (api.fs/read-edn (api.fs/from-submodule-dir module-name submodule-name "module.ref.edn")))
+
 (defn download-module-config
   ([module-ref] (download-module-config module-ref {}))
   ([{:keys [url sha subdir] :or {subdir ".kl"}} vars]
@@ -83,7 +89,26 @@
                                          (replace-vars vars))]
                        (spit (api.fs/from-submodule-dir module-name submodule-name file) contents)))))))
 
+      (save-module-ref module-name submodule-name module-ref)
       (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.edn") module))))
 
 (defn rm-local-module! [{:keys [module-name submodule-name]}]
   (api.fs/rm-dir! (api.fs/from-submodule-dir module-name submodule-name)))
+
+(defn describe-downloaded-submodules [module-name]
+  (let [dir (api.fs/from-module-work-dir module-name ".modules")]
+    (->> (.listFiles dir)
+         (filter (fn [^java.io.File file]
+                   (.isDirectory file)))
+         (map (fn [^java.io.File file]
+                (.getName file)))
+         (filter (fn [name]
+                   (not (str/starts-with? name "."))))
+
+         (map (fn [submodule-name]
+                (p/vthread
+                 (let [ref (load-module-ref module-name submodule-name)]
+                   [(keyword submodule-name) {:ref ref}]))))
+         p/all
+         deref
+         (into {}))))

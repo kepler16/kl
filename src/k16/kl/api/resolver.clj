@@ -4,8 +4,8 @@
    [jsonista.core :as json]
    [k16.kl.api.fs :as api.fs]
    [k16.kl.api.github :as api.github]
-   [k16.kl.api.module.loader :as module.loader]
    [k16.kl.api.module.downloader :as module.downloader]
+   [k16.kl.api.module.loader :as module.loader]
    [k16.kl.log :as log]
    [promesa.core :as p]))
 
@@ -63,11 +63,7 @@
              (if should-resolve?
                (let [{:keys [module ref]} (resolve-module partial-ref)
                      submodules (resolve-module-tree (assoc props :module module))]
-                 [submodule-name {:ref ref
-                                  :module module
-                                  :submodules submodules
-                                  :changed? true
-                                  :previous-ref (:ref lock-entry)}])
+                 [submodule-name {:ref ref :module module :submodules submodules}])
                [submodule-name lock-entry])))))
        p/all
        deref
@@ -110,23 +106,23 @@
           (assoc modules module-name (:ref entry)))
         {})))
 
-(defn- tree->module-diff [tree lock]
+(defn- tree->module-diff [tree sub-modules]
   (let [updated
         (->> tree
              (reduce
-              (fn [updates [module-name entry]]
-                (let [{:keys [ref changed? previous-ref]} entry]
-                  (if (and changed?
-                           (not= (:sha ref) (:sha previous-ref)))
-                    (assoc updates module-name entry)
+              (fn [updates [submodule-name entry]]
+                (let [{:keys [ref]} entry
+                      previous-ref (get-in sub-modules [submodule-name :ref])]
+                  (if (not= (:sha ref) (:sha previous-ref))
+                    (assoc updates submodule-name (assoc entry :previous-ref previous-ref))
                     updates)))
               {}))
 
         removed
-        (->> lock
-             (reduce (fn [removed [module-name entry]]
-                       (if-not (contains? tree module-name)
-                         (assoc removed module-name (assoc entry :removed? true))
+        (->> sub-modules
+             (reduce (fn [removed [submodule-name {:keys [ref]}]]
+                       (if-not (contains? tree submodule-name)
+                         (assoc removed submodule-name {:ref ref :removed? true})
                          removed))
                      {}))]
 
@@ -137,15 +133,17 @@
         flattened (flatten-modules-tree {:tree tree})]
     {:lock (tree->lock flattened)
      :modules (tree->modules flattened)
-     :module-diff (tree->module-diff flattened (:lock props))}))
+     :module-diff (tree->module-diff flattened (:sub-modules props))}))
 
 (defn pull! [module-name {:keys [update-lockfile?]}]
   (let [module (module.loader/read-module-file (api.fs/get-root-module-file module-name))
         current-lock (api.fs/read-edn (api.fs/get-lock-file module-name))
+        current-sub-modules (module.downloader/describe-downloaded-submodules module-name)
 
         {:keys [lock modules module-diff]}
         (resolve-modules {:module module
                           :lock current-lock
+                          :sub-modules current-sub-modules
                           :force-resolve? update-lockfile?})
 
         lockfile-updated? (not= lock current-lock)]
@@ -171,18 +169,18 @@
            deref)
 
       (println)
-      (doseq [[submodule-name {:keys [ref previous-ref changed? removed?]}] module-diff]
+      (doseq [[submodule-name {:keys [ref previous-ref removed?]}] module-diff]
         (let [module-name (str "@|yellow " (name submodule-name) "|@@|white @|@")
               from (when previous-ref (subs (:sha previous-ref) 0 7))
               to (subs (:sha ref) 0 7)]
           (cond
-            (and changed? from)
+            from
             (log/info (str "@|bold,cyan ~|@ " module-name "@|bold,red " from "|@" "@|bold,green " to "|@"))
 
             removed?
             (log/info (str "@|bold,red -|@ " module-name "@|bold,red " to "|@"))
 
-            changed?
+            :else
             (log/info (str "@|bold,green +|@ " module-name "@|bold,green " to "|@")))))
 
       (println))
