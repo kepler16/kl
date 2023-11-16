@@ -4,7 +4,6 @@
    [k16.kl.api.module :as api.module]
    [k16.kl.api.proxy :as api.proxy]
    [k16.kl.api.resolver :as api.resolver]
-   [k16.kl.api.state :as api.state]
    [k16.kl.log :as log]
    [k16.kl.prompt.config :as prompt.config]))
 
@@ -14,29 +13,8 @@
     (= 0 i) "├──"
     :else "├──"))
 
-(defn- list-routes-tree [props]
-  (let [module-name (prompt.config/get-module-name props)
-
-        {:keys [modules]} (api.resolver/pull! module-name {})
-        module (api.module/get-resolved-module module-name modules)
-
-        state (api.state/get-state module-name)
-
-        routes (->> (get-in module [:network :routes])
-                    (map (fn [[route-name route]]
-                           (merge route
-                                  {:name (name route-name)
-                                   :path-prefix (or (:path-prefix route) "/")
-                                   :enabled (get-in state [:network :routes route-name :enabled] true)})))
-                    (sort (fn [a b]
-                            (let [a (count (:path-prefix a))
-                                  b (count (:path-prefix b))]
-                              (cond
-                                (> a b) 1
-                                (< a b) -1
-                                :else 0)))))
-
-        routes-by-host (->> routes
+(defn- list-routes-tree [routes]
+  (let [routes-by-host (->> routes
                             (group-by :host)
                             (map-indexed list))]
 
@@ -48,41 +26,40 @@
         (let [border (if (= i (- (count routes-by-host) 1))
                        " "
                        "│")
-
               branch (str border "   " (get-tree-branch j (count routes)))
-
               path (str " @|bold,green " (or (:path-prefix route) "/") "|@")
-
-              service (get-in module [:network :services (:service route)])
-              endpoint (name (or (:endpoint route)
-                                 (:default-endpoint service)))
-
-              target (str " -> " (name (:service route)) "@|white @|@@|cyan " endpoint "|@")]
+              target (str " -> " (name (:service route)) "@|white @|@@|cyan " (name (:endpoint route)) "|@")]
           (log/info (str branch path target)))))))
 
-(defn- list-routes-table [props]
+(defn- list-routes-table [routes]
+  (pprint/print-table [:name :host :path-prefix :service :endpoint :enabled] routes))
+
+(defn- list-routes [props]
   (let [module-name (prompt.config/get-module-name props)
 
         {:keys [modules]} (api.resolver/pull! module-name {})
         module (api.module/get-resolved-module module-name modules)
 
-        state (api.state/get-state module-name)
-
-        routes (->> (get-in module [:network :routes])
-                    (map (fn [[route-name route]]
-                           (let [service (get-in module [:network :services (:service route)])]
-                             (merge route
-                                    {:name (name route-name)
-                                     :endpoint (or (:endpoint route)
-                                                   (:default-endpoint service))
-                                     :enabled (get-in state [:network :routes route-name :enabled] true)})))))]
-
-    (pprint/print-table [:name :host :path-prefix :service :endpoint :enabled] routes)))
-
-(defn- list-routes [props]
-  (case (:output props)
-    "tree" (list-routes-tree props)
-    "table" (list-routes-table props)))
+        routes
+        (->> (get-in module [:network :routes])
+             (map (fn [[route-name route]]
+                    (let [service (get-in module [:network :services (:service route)])]
+                      (merge route
+                             {:name (name route-name)
+                              :path-prefix (or (:path-prefix route) "/")
+                              :endpoint (or (:endpoint route)
+                                            (:default-endpoint service))
+                              :enabled (get route :enabled true)}))))
+             (sort (fn [a b]
+                     (let [a (count (:path-prefix a))
+                           b (count (:path-prefix b))]
+                       (cond
+                         (> a b) 1
+                         (< a b) -1
+                         :else 0)))))]
+    (case (:output props)
+      "tree" (list-routes-tree routes)
+      "table" (list-routes-table routes))))
 
 (defn- apply-routes! [props]
   (let [module-name (prompt.config/get-module-name props)
@@ -138,11 +115,13 @@
                           :short 0
                           :type :string}]
 
-                  :runs (fn [_])} {:command "set-endpoint"
-                                   :description "Set the endpoint for a route"
+                  :runs (fn [_])}
 
-                                   :opts [{:option "module"
-                                           :short 0
-                                           :type :string}]
+                 {:command "set-endpoint"
+                  :description "Set the endpoint for a route"
 
-                                   :runs (fn [_])}]})
+                  :opts [{:option "module"
+                          :short 0
+                          :type :string}]
+
+                  :runs (fn [_])}]})
