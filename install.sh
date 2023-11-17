@@ -60,11 +60,16 @@ Darwin*) os=macos;;
 *)       echo "unknown: $(uname -s)"; exit 1;;
 esac
 
+case "$(arch)" in
+x86_64) arch=amd64;;
+*)      arch=$(arch);;
+esac
+
 if [[ "$version" == "" ]]; then
   version=$(curl -s https://api.github.com/repos/$github_user/$repo/releases/latest | jq -r '.tag_name')
 fi
 
-filename="$repo-$os-$(arch).tar.gz"
+filename="$repo-$os-$arch.tar.gz"
 download_url="https://github.com/$github_user/$repo/releases/download/$version/$filename"
 
 echo -e "Downloading $download_url to $download_dir"
