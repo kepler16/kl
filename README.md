@@ -11,6 +11,7 @@ KL tries to assume as little as possible about systems being run in order to mak
 ### Index
 
 + [**Installation**](#installation)
++ [**Initial Setup**](#initial-setup)
 + [**Network Topology**](./docs/network-topology.md)
 + [**Concepts**](#concepts)
   + [**Modules**](#modules)
@@ -41,20 +42,61 @@ Or you can get the binaries directly from the GitHub releases page and put them 
 
 ---
 
-If this is your first time using this tool on your machine then you will need to setup your system's DNS resolver:
+## Initial Setup
 
-```bash
-eval $(kl resolver setup)
+If this is your first time using this tool on your machine then you will need to configure your system to resolve `.test` domains to `127.0.0.1:80`. This is essential for the networking components to work. How this should be configured depends on your operating system.
+
+#### Macos
+
+On Macos you need to configure the native resolver to use the nameserver at `127.0.0.1:53` when resolving `.test` domains. This is done by creating a file at `/etc/resolver/test` with the contents:
+
+```
+nameserver 127.0.0.1
 ```
 
-The you can start the docker network and proxy containers:
+You can run the following script do this automatically:
+
+```bash
+sudo mkdir -p /etc/resolver
+echo 'nameserver 127.0.0.1' | sudo tee -a /etc/resolver/test > /dev/null
+```
+
+KL runs this DNS server for you as one of the networking containers. See the [Network Topology](./docs/network-topology.md) document for more information on the networking containers.
+
+Now you can start the docker network and proxy containers:
 
 ```bash
 kl network start
-# and `kl network stop` to tear it down 
 ```
 
-These containers are configured to always restart even after exiting/restarting docker.
+#### Linux
+
+Linux doesn't have a completely standard way of handling DNS and so this setup will depend a bit on your particular setup. A very common/standard DNS resolver setup on linux is `systemd-resolved` and so below is a guide on how to set get setup using this. If you don't use `systemd-resolved` then you will need to configure your system to route `.test` domains to `127.0.0.1` however is appropriate for you.
+
+Edit your `/etc/systemd/resolved.conf` file and add the following to the `[Resolve]` section:
+
+```toml
+[Resolve]
+DNS=127.0.0.1:5343
+Domains=~test
+```
+
+This configures `systemd-resolved` to use the DNS server running at `127.0.0.1:5343` to resolve `.test` domains. KL runs this DNS server for you as one of the networking containers. See the [Network Topology](./docs/network-topology.md) document for more information on the networking containers.
+
+Apply the changes by restarting the `systemd-resolved` service
+
+```bash
+sudo systemctl restart systemd-resolved
+```
+
+Now you can start the docker network and proxy containers:
+
+```bash
+kl network start
+```
+
+> [!NOTE]  
+> On linux the host dns network container's port defaults to `5343`. If you would like to change this you can start the networking components with a different port by running `kl network start --host-dns-port=5343`
 
 ---
 
@@ -64,7 +106,7 @@ These containers are configured to always restart even after exiting/restarting 
 
 The core idea behind KL is to enable identifying services with stable `.test` domains and then having a flexible means of swapping out which endpoint the domain routes traffic to. This is typically how we run our services in production environments, there is no reason not to do it locally too.
 
-One of the main benefits that we draw from this is the significant simplification of service configuration. Services can be configured statically (committed to code/configuration) with the domains of other services they need to communicate with regardless of where those services are running or what their ip:port conbinations are.
+One of the main benefits that we draw from this is the significant simplification of service configuration. Services can be configured statically (committed to code/configuration) with the domains of other services they need to communicate with regardless of where those services are running or what their ip:port combinations are.
 
 These domains are stable across all developers' machines and don't change when a developer needs to alter how or where they are running any particular service.
 
@@ -147,3 +189,11 @@ A route is an HTTP routing rule made up of a combination of `host` and `prefix`.
 KL has built-in support for [fzf](https://github.com/junegunn/fzf) and [gum](https://github.com/charmbracelet/gum) for prompt interfaces and selections. If these programs are installed and on your `PATH` then they will automatically be used. Alternatively kl will fallback to using a native prompt implementation if neither gum nor fzf can be found.
 
 For a better prompt experience it is highly recommended to have these programs installed on your PATH.
+
+## FAQ
+
+### Why does the host dnsmasq container bind a different port on Macos compared to Linux?
+
+On macos there is no way to specify the port to use when configuring the system resolver via the `/etc/resolver/test` path. Therefore we need to use port `53`.
+
+On Linux there is typically already some dns components binding port `53` and so we default to using a different, non-standard port - `5343`.

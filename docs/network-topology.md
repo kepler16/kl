@@ -6,7 +6,7 @@ We make use of three main networking components:
 + A dnsmasq container which handles DNS from the host machine (Bound to :53) and resolves to `127.0.0.1`
 + A dnsmasq container which handles DNS requests from docker containers and resolves to the Traefik proxy
 
-All three components are running inside a Docker network and have predefined, static IP addresses. It's necessary to have two separate dnsmasq containers as the proxy is identified differently from the host vs from inside the docker network. On mac, the host machine will need to configure `/etc/resolver/test` to point to `127.0.0.1` so that the dnsmasq container can handle DNS requests for `.test` domains. There is a convenience `resolver setup` cli command to help automate this.
+All three components are running inside a Docker network and have predefined, static IP addresses. It's necessary to have two separate dnsmasq containers as the proxy is identified differently from the host vs from inside the docker network. The host machine will need to be configured to use `127.0.0.1` to resolve `.test` domains. See the [Initial Setup](../README.md#initial-setup) section for more information on how to configure this.
 
 Which this topology, the following properties are observed:
 

@@ -7,7 +7,6 @@
    [k16.kl.commands.endpoints :as cmd.endpoints]
    [k16.kl.commands.modules :as cmd.modules]
    [k16.kl.commands.network :as cmd.network]
-   [k16.kl.commands.resolver :as cmd.resolver]
    [k16.kl.commands.routes :as cmd.routes]
    [k16.kl.commands.services :as cmd.services]
    [k16.kl.log :as log])
@@ -31,7 +30,6 @@
    :subcommands [version-cmd
                  cmd.modules/cmd
                  cmd.network/cmd
-                 cmd.resolver/cmd
                  cmd.containers/cmd
                  cmd.services/cmd
                  cmd.endpoints/cmd

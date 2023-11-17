@@ -31,16 +31,23 @@
 
     module))
 
-(defn- start-network! [_]
-  (let [workdir (get-tmp-dir)
-        module (write-network-module)]
+(defn- start-network! [{:keys [host-dns host-dns-port]}]
+  (let [workdir (api.fs/from-config-dir ".kl/network")
+        module (cond-> (write-network-module)
+                 (not host-dns)
+                 (assoc-in [:containers :dnsmasq-external :enabled]
+                           false)
+
+                 host-dns-port
+                 (assoc-in [:containers :dnsmasq-external :ports]
+                           [(str host-dns-port ":53/udp") (str host-dns-port ":53/tcp")]))]
+
     (api.proxy/write-proxy-config! {:module-name "kl"
                                     :module module})
     (api.executor/run-module-containers! {:module module
                                           :direction :up
                                           :project-name "kl"
-                                          :workdir workdir})
-    (api.fs/rm-dir! workdir)))
+                                          :workdir workdir})))
 
 (defn- stop-network! [_]
   (let [workdir (get-tmp-dir)
@@ -53,12 +60,27 @@
                                           :workdir workdir})
     (api.fs/rm-dir! workdir)))
 
+(def ^:private default-port
+  (let [os (-> (System/getProperty "os.name") .toLowerCase)]
+    (cond
+      (str/includes? os "mac") "53"
+      (str/includes? os "linux") "5343"
+      :else "5343")))
+
 (def cmd
   {:command "network"
    :description "Manage core network components"
 
    :subcommands [{:command "start"
                   :description "Start the core network components"
+
+                  :opts [{:option "host-dns"
+                          :default true
+                          :type :with-flag}
+                         {:option "host-dns-port"
+                          :default default-port
+                          :type :string}]
+
                   :runs start-network!}
 
                  {:command "stop"
