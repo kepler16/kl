@@ -129,7 +129,9 @@ A module is the primary unit of configuration in kl and is comprised of [contain
 A module is a directory located in `~/.config/kl/modules/` that must contain at least a file called `module.(edn|json|yaml|yml)`. Here is an example of a module:
 
 ```clj
-{:modules {:remote-module-name {:url "owner/repo"
+{:include ["config.toml"]
+
+ :modules {:remote-module-name {:url "owner/repo"
                                 :ref "<optional-ref>"
                                 :sha "<optional-sha>"
                                 :subdir "<optional/sub/directory>"}}
@@ -140,11 +142,8 @@ A module is a directory located in `~/.config/kl/modules/` that must contain at 
            :routes {:example-route {:host "example.test"
                                     :service :example}}}
 
- ;; structurally the same as a docker-compose `volume`
- :volumes {} 
-
- ;; structurally the same as a docker-compose container
- :containers {:container-a {:image ""}}} 
+ :containers {:example {:image "ghcr.io/example/example:{{SHA_SHORT}}"
+                        :volumes ["{{DIR}}/config.toml:/config.toml"]}}} 
 ```
 
 #### Module Resolution
@@ -165,6 +164,29 @@ Because module resolution is implemented as a full deep-merge, this allows devel
 ```
 
 Note how only the property being changed needed to be specified. This is assuming the container `:example` was already defined by one of the referenced sub-modules.
+
+#### Variable Substitution
+
+When a module is resolved kl will perform some basic variable substitution to allow for simple templating. Variables should be in the form `{{VAR_NAME}}` where `VAR_NAME` can be one of the following:
+
+Variable | Description 
+---|---
+SHA | The full git sha that the module was resolved as
+SHA_SHORT | The short version of `SHA` - only the first 7 chars
+DIR | This is the local module directory on the host machine. This can be used for referencing config files that are included as part of the module.
+
+Here is an example module that makes use of templating:
+
+```clj
+{:include ["config.toml"]
+ :containers 
+ {:example {:image "ghcr.io/example/example:{{SHA_SHORT}}"
+            :volumes ["{{DIR}}/config.toml:/config.toml"]}}}
+```
+
+#### Module Spec
+
+See the [Module Spec](./docs/module-spec.md) document.
 
 ## Containers
 
