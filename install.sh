@@ -60,9 +60,9 @@ Darwin*) os=macos;;
 *)       echo "unknown: $(uname -s)"; exit 1;;
 esac
 
-case "$(arch)" in
+case "$(uname -m)" in
 x86_64) arch=amd64;;
-*)      arch=$(arch);;
+*)      arch=$(uname -m);;
 esac
 
 if [[ "$version" == "" ]]; then

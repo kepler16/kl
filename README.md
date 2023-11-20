@@ -186,7 +186,7 @@ Here is an example module that makes use of templating:
 
 #### Module Spec
 
-See the [Module Spec](./docs/module-spec.md) document.
+See the [Module Spec](./docs/module-spec.md)
 
 ## Containers
 
