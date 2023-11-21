@@ -95,7 +95,7 @@ Now you can start the docker network and proxy containers:
 kl network start
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > On linux the host DNS network container's port defaults to binding to `5343`. If you would like to change this you can start the networking components with a different port by running `kl network start --host-dns-port=<custom-port>`. You will then also need to update your `/etc/systemd/resolved.conf` file to match.
 
 ---
@@ -208,18 +208,16 @@ Below are some common ways of addressing services running in different contexts:
   + `http://example:8080`
   + `http://<container-ip>:8080`
 + A process running on the host and bound to port `8080` could be addressed as
-  + On macos - `http://host.docker.internal:8080`
+  + On macos and linux* - `http://host.docker.internal:8080`
   + On linux - `http://172.17.0.1:8080`
 
-Because of this host address discrepancy between linux and macos it is highly recommended for **linux based users** to add the following to their `/etc/hosts` file:
-
-```bash
-172.17.0.1 host.docker.internal
-```
-
-**DO NOT** do this if you are on macos.
-
-This is an acceptable compromise to allow for a stable way of addressing the host in module configs that are intended to be consumed by developers on different operating systems.
+> [!NOTE]
+> 
+> On **linux\*** docker does not configure the `host.docker.internal` domain which is typically only available on macos when using something like Docker Desktop.
+>
+> To allow for a consistent way of addressing the host that works across all operating systems kl manually adds the `host.docker.internal:172.17.0.1` host to to the proxy container.
+>
+> If you don't want this behaviour you can disable it by running `kl network start --add-host "host.docker.internal:"` (note the empty ip after the ':').
 
 ## Routes
 

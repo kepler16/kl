@@ -31,8 +31,26 @@
 
     module))
 
-(defn- start-network! [{:keys [host-dns host-dns-port]}]
+(def ^:private os
+  (-> (System/getProperty "os.name") .toLowerCase))
+
+(def ^:private default-hosts
+  (cond
+    (str/includes? os "linux") ["host.docker.internal:172.17.0.1"]
+    :else []))
+
+(defn- start-network! [{:keys [host-dns host-dns-port add-host]}]
   (let [workdir (api.fs/from-config-dir ".kl/network")
+
+        extra-hosts (->> (concat default-hosts add-host)
+                         (reduce (fn [acc host]
+                                   (let [[host ip] (str/split host #":")]
+                                     (assoc acc host ip)))
+                                 {})
+                         (filter (fn [[_ ip]]
+                                   (and ip (not= "" ip))))
+                         (map (fn [[host ip]] (str host ":" ip))))
+
         module (cond-> (write-network-module)
                  (not host-dns)
                  (assoc-in [:containers :dnsmasq-external :enabled]
@@ -40,7 +58,11 @@
 
                  host-dns-port
                  (assoc-in [:containers :dnsmasq-external :ports]
-                           [(str host-dns-port ":53/udp") (str host-dns-port ":53/tcp")]))]
+                           [(str host-dns-port ":53/udp") (str host-dns-port ":53/tcp")])
+
+                 (seq extra-hosts)
+                 (assoc-in [:containers :proxy :extra_hosts]
+                           extra-hosts))]
 
     (api.proxy/write-proxy-config! {:module-name "kl"
                                     :module module})
@@ -61,11 +83,10 @@
     (api.fs/rm-dir! workdir)))
 
 (def ^:private default-port
-  (let [os (-> (System/getProperty "os.name") .toLowerCase)]
-    (cond
-      (str/includes? os "mac") "53"
-      (str/includes? os "linux") "5343"
-      :else "5343")))
+  (cond
+    (str/includes? os "mac") "53"
+    (str/includes? os "linux") "5343"
+    :else "5343"))
 
 (def cmd
   {:command "network"
@@ -79,6 +100,9 @@
                           :type :with-flag}
                          {:option "host-dns-port"
                           :default default-port
+                          :type :string}
+                         {:option "add-host"
+                          :multiple true
                           :type :string}]
 
                   :runs start-network!}
