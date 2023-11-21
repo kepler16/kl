@@ -46,7 +46,7 @@ Or you can get the binaries directly from the GitHub releases page and put them 
 
 If this is your first time using this tool on your machine then you will need to configure your system to resolve `.test` domains to `127.0.0.1:80`. This is essential for the networking components to work. How this should be configured depends on your operating system.
 
-#### Macos
+### `Macos`
 
 On Macos you need to configure the native resolver to use the nameserver at `127.0.0.1:53` when resolving `.test` domains. This is done by creating a file at `/etc/resolver/test` with the contents:
 
@@ -69,13 +69,13 @@ Now you can start the docker network and proxy containers:
 kl network start
 ```
 
-#### Linux
+### `Linux`
 
 Linux doesn't have a completely standard way of handling DNS and so this setup will depend a bit on your particular setup. A very common/standard DNS resolver setup on linux is `systemd-resolved` and so below is a guide on how to set get setup using this. If you don't use `systemd-resolved` then you will need to configure your system to route `.test` domains to `127.0.0.1` however is appropriate for you.
 
 Edit your `/etc/systemd/resolved.conf` file and add the following to the `[Resolve]` section:
 
-```toml
+```bash
 [Resolve]
 DNS=127.0.0.1:5343
 Domains=~test
@@ -96,7 +96,7 @@ kl network start
 ```
 
 > [!NOTE]  
-> On linux the host dns network container's port defaults to `5343`. If you would like to change this you can start the networking components with a different port by running `kl network start --host-dns-port=5343`
+> On linux the host DNS network container's port defaults to binding to `5343`. If you would like to change this you can start the networking components with a different port by running `kl network start --host-dns-port=<custom-port>`. You will then also need to update your `/etc/systemd/resolved.conf` file to match.
 
 ---
 
@@ -136,7 +136,7 @@ A module is a directory located in `~/.config/kl/modules/` that must contain at 
                                 :sha "<optional-sha>"
                                 :subdir "<optional/sub/directory>"}}
 
- :network {:services {:example {:endpoints {:container {:url "http://example"}
+ :network {:services {:example {:endpoints {:container {:url "http://example:3000"}
                                             :host {:url "http://host.docker.internal:3000"}}
                                 :default-endpoint :container}}
            :routes {:example-route {:host "example.test"
@@ -179,9 +179,9 @@ Here is an example module that makes use of templating:
 
 ```clj
 {:include ["config.toml"]
- :containers 
- {:example {:image "ghcr.io/example/example:{{SHA_SHORT}}"
-            :volumes ["{{DIR}}/config.toml:/config.toml"]}}}
+
+ :containers {:example {:image "ghcr.io/example/example:{{SHA_SHORT}}"
+                        :volumes ["{{DIR}}/config.toml:/config.toml"]}}}
 ```
 
 #### Module Spec
@@ -198,7 +198,28 @@ A service is a stable container around a set of [endpoints](#endpoints). A servi
 
 ## Endpoints
 
-An endpoint is defined as part of a [service](#services) and generally represents some process running somewhere that is reachable over HTTP. This can be a container, a process on the host machine or some remote service in the cloud.
+An endpoint is defined as part of a [service](#services) and represent some process/service running somewhere that is reachable over HTTP or any scheme supported by [Traefik](https://doc.traefik.io/traefik/). This can be a container, a process on the host machine or some remote service in the cloud.
+
+An important detail to keep in mind is that endpoints are always resolved from the context of the proxy container which is running inside of the docker network. This means that any endpoint URL's need to be reachable from the proxy container/docker network. This also means that `localhost` or `127.0.0.1` does _not_ address the host.
+
+Below are some common ways of addressing services running in different contexts:
+
++ A container called `example` with a port `8080` defined in the module could be addressed as
+  + `http://example:8080`
+  + `http://<container-ip>:8080`
++ A process running on the host and bound to port `8080` could be addressed as
+  + On macos - `http://host.docker.internal:8080`
+  + On linux - `http://172.17.0.1:8080`
+
+Because of this host address discrepancy between linux and macos it is highly recommended for **linux based users** to add the following to their `/etc/hosts` file:
+
+```bash
+172.17.0.1 host.docker.internal
+```
+
+**DO NOT** do this if you are on macos.
+
+This is an acceptable compromise to allow for a stable way of addressing the host in module configs that are intended to be consumed by developers on different operating systems.
 
 ## Routes
 
@@ -206,7 +227,7 @@ A route is an HTTP routing rule made up of a combination of `host` and `prefix`.
 
 ---
 
-## Prompts
+## CLI Prompts
 
 KL has built-in support for [fzf](https://github.com/junegunn/fzf) and [gum](https://github.com/charmbracelet/gum) for prompt interfaces and selections. If these programs are installed and on your `PATH` then they will automatically be used. Alternatively kl will fallback to using a native prompt implementation if neither gum nor fzf can be found.
 
@@ -214,8 +235,10 @@ For a better prompt experience it is highly recommended to have these programs i
 
 ## FAQ
 
-### Why does the host dnsmasq container bind a different port on Macos compared to Linux?
+### Why does the host dnsmasq container bind a different port on Macos vs Linux?
 
 On macos there is no way to specify the port to use when configuring the system resolver via the `/etc/resolver/test` path. Therefore we need to use port `53`.
 
 On Linux there is typically already some dns components binding port `53` and so we default to using a different, non-standard port - `5343`.
+
+
