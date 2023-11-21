@@ -22,4 +22,4 @@ build-and-run: build
   java --enable-preview -jar target/cli.jar
 
 run *args: 
-  clojure -m k16.kl.cli {{args}}
+  clojure -M -m k16.kl.cli {{args}}
