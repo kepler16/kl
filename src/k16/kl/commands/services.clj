@@ -20,12 +20,13 @@
         state (api.state/get-state module-name)
 
         service-name
-        (-> (prompt/select "Select Service"
-                           (->> (get-in module [:network :services])
-                                (map (fn [[service-name]]
-                                       {:value (name service-name)
-                                        :label (name service-name)}))))
-            keyword)
+        (or (-> props :service keyword)
+            (-> (prompt/select "Select Service"
+                               (->> (get-in module [:network :services])
+                                    (map (fn [[service-name]]
+                                           {:value (name service-name)
+                                            :label (name service-name)}))))
+                keyword))
 
         _ (when-not service-name (cli.utils/exit! "No service selected" 1))
         _ (log/info (str "Using @|bold " (name service-name) "|@"))
@@ -33,12 +34,13 @@
         service (get-in module [:network :services service-name])
 
         endpoint-name
-        (-> (prompt/select "Select Default Endpoint"
-                           (->> (:endpoints service)
-                                (map (fn [[endpoint-name]]
-                                       {:value (name endpoint-name)
-                                        :label (name endpoint-name)}))))
-            keyword)
+        (or (-> props :endpoint :keyword)
+            (-> (prompt/select "Select Default Endpoint"
+                               (->> (:endpoints service)
+                                    (map (fn [[endpoint-name]]
+                                           {:value (name endpoint-name)
+                                            :label (name endpoint-name)}))))
+                keyword))
 
         _ (when-not endpoint-name (cli.utils/exit! "No endpoint selected" 1))
         _ (log/info (str "Using @|bold " (name endpoint-name) "|@"))
@@ -85,6 +87,12 @@
 
                   :opts [{:option "module"
                           :short 0
+                          :type :string}
+                         {:option "service"
+                          :short 1
+                          :type :string}
+                         {:option "endpoint"
+                          :short 2
                           :type :string}]
 
                   :runs set-default-service-endpoint!}]})
