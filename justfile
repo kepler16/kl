@@ -5,16 +5,7 @@ build: clean
   clojure -T:build uber
 
 native-image:
-  $GRAALVM_HOME/bin/native-image \
-    -jar target/kl.jar \
-    --no-fallback \
-    --features=clj_easy.graal_build_time.InitClojureClasses \
-    --report-unsupported-elements-at-runtime \
-    -o target/kl \
-    -H:+UnlockExperimentalVMOptions \
-    -H:ReflectionConfigurationFiles=./graal/reflect-config.json \
-    -H:ResourceConfigurationFiles=./graal/resources.json \
-    -H:+ReportExceptionStackTraces
+  $GRAALVM_HOME/bin/native-image -jar target/kl.jar target/kl
 
 build-native: build native-image
 
