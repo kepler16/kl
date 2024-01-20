@@ -17,7 +17,7 @@
 
 (defn- write-network-module []
   (let [prefix ".kl/network"
-        module-file (io/resource "network-module/module.edn")
+        module-file (io/resource "k16/kl/module/network/module.edn")
         module-raw (-> module-file
                        slurp
                        (str/replace "{{DIR}}" (.toString (api.fs/from-config-dir prefix))))
@@ -26,7 +26,7 @@
     (spit (api.fs/from-config-dir prefix "module.edn") module-raw)
 
     (doseq [file (:include module)]
-      (let [contents (slurp (io/resource (str "network-module/" file)))]
+      (let [contents (slurp (io/resource (str "k16/kl/module/network/" file)))]
         (spit (api.fs/from-config-dir prefix file) contents)))
 
     module))
