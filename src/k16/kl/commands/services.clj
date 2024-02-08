@@ -34,7 +34,7 @@
         service (get-in module [:network :services service-name])
 
         endpoint-name
-        (or (-> props :endpoint :keyword)
+        (or (-> props :endpoint keyword)
             (-> (prompt/select "Select Default Endpoint"
                                (->> (:endpoints service)
                                     (map (fn [[endpoint-name]]
