@@ -1,19 +1,19 @@
 {:mvn/repos {"github-kepler" {:url "https://maven.pkg.github.com/kepler16/*"}}
 
  :paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}
-        metosin/malli {:mvn/version "0.13.0"}
+ :deps {org.clojure/clojure {:mvn/version "1.11.3"}
+        metosin/malli {:mvn/version "0.16.2"}
         meta-merge/meta-merge {:mvn/version "1.0.0"}
-        metosin/jsonista {:mvn/version "0.3.7"}
+        metosin/jsonista {:mvn/version "0.3.9"}
         clj-commons/clj-yaml {:mvn/version "1.0.27"}
-        babashka/process {:mvn/version "0.5.21"}
-        jansi-clj/jansi-clj {:mvn/version "1.0.1"}
+        babashka/process {:mvn/version "0.5.22"}
+        jansi-clj/jansi-clj {:mvn/version "1.0.3"}
         cli-matic/cli-matic {:mvn/version "0.5.4"}
         org.clojars.civa86/pretty.cli {:mvn/version "1.0.1"}
         funcool/promesa {:mvn/version "11.0.678"}
-        http-kit/http-kit {:mvn/version "2.7.0"}}
+        http-kit/http-kit {:mvn/version "2.8.0"}}
 
- :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.5"}}
+ :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
                    :ns-default build}
 
            :native {:extra-deps {com.github.clj-easy/graal-build-time {:mvn/version "1.0.5"}}}
