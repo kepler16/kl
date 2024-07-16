@@ -1,8 +1,5 @@
-clean:
-  clojure -T:build clean
-
-build: clean
-  clojure -T:build uber
+build:
+  clojure -T:build build
 
 native-image:
   $GRAALVM_HOME/bin/native-image -jar target/kl.jar target/kl

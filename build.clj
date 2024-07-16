@@ -5,12 +5,12 @@
 (def basis (b/create-basis {:project "deps.edn"
                             :aliases [:native]}))
 (def class-dir "target/classes")
-(def uber-file "target/kl.jar")
+(def jar-file "target/kl.jar")
 
 (defn clean [_]
   (b/delete {:path "target"}))
 
-(defn uber [_]
+(defn build [_]
   (clean nil)
   (b/copy-dir {:src-dirs ["src" "resources"]
                :target-dir class-dir})
@@ -22,6 +22,6 @@
                               "-Dclojure.spec.skip-macros=true"]})
 
   (b/uber {:class-dir class-dir
-           :uber-file uber-file
+           :uber-file jar-file
            :basis basis
            :main 'k16.kl.cli}))

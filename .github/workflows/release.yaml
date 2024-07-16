@@ -9,20 +9,19 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-latest-xlarge]
         include:
-        - os: ubuntu-latest
-          binary-name: kl-linux-amd64
-        - os: macos-latest
-          binary-name: kl-macos-amd64
-        - os: macos-latest-xlarge
-          binary-name: kl-macos-arm64
+        - arch: linux-amd64
+          runs-on: ubuntu-latest
+        - arch: macos-amd64
+          runs-on: macos-latest
+        - arch: macos-arm64
+          runs-on: macos-latest-xlarge
 
     env:
       GITHUB_USERNAME: ${{ secrets.ORG_GITHUB_ACTOR }}
       GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
     steps:
     - name: Checkout git repo
       uses: actions/checkout@v2
@@ -32,24 +31,20 @@ jobs:
     - name: Fetch Tags
       run: git fetch --tags origin
 
-    - uses: actions/setup-java@v2
+    - uses: graalvm/setup-graalvm@v1
       with:
-        distribution: 'temurin'
-        java-version: 21
+        java-version: '22'
+        distribution: 'graalvm'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: extractions/setup-just@v1
     - uses: DeLaGuardo/setup-clojure@9.5
       with:
         cli: latest
 
-    - uses: graalvm/setup-graalvm@v1
-      with:
-        java-version: '21'
-        distribution: 'graalvm'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Configure Auth
       run: |
+        mkdir -p ~/.m2/
         cp ./build/settings.xml ~/.m2/settings.xml
 
     - name: Build Native Image
@@ -57,13 +52,13 @@ jobs:
 
     - name: Pack binary
       run: |
-        tar -czf ${{ matrix.binary-name }}.tar.gz -C ./target kl
+        tar -czf kl-${{ matrix.arch }}.tar.gz -C ./target kl
 
     - uses: actions/upload-artifact@v3
       with:
-        name: kl-native-images
+        name: binaries
         if-no-files-found: error
-        path: ${{ matrix.binary-name }}.tar.gz
+        path: kl-${{ matrix.arch }}.tar.gz
 
   release:
     runs-on: ubuntu-latest
@@ -75,7 +70,7 @@ jobs:
       - name: Download Binary Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: kl-native-images
+          name: binaries
           path: bin
 
       - name: Calculate checksums
@@ -85,11 +80,6 @@ jobs:
           done
 
           mv checksums.txt bin/checksums.txt
-
-      - uses: actions/setup-java@v2
-        with:
-          distribution: 'temurin'
-          java-version: 21
 
       - name: Release
         uses: softprops/action-gh-release@v1
