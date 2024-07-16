@@ -44,6 +44,8 @@
    :restart "unless-stopped"
    :networks {:kl {:ipv4_address "172.5.0.101"}}
    :command ["--api.insecure=true"
+             "--log.level=INFO"
+             "--accesslog=true"
              "--providers.file.directory=/proxy-config"
              "--providers.file.watch=true"]
    :ports ["80:80"]
