@@ -7,7 +7,7 @@
   (api.fs/from-config-dir "proxy/" (str module-name ".yaml")))
 
 (defn- route->traefik-rule [{:keys [host path-prefix]}]
-  (cond-> (str "Host(`" host "`)")
+  (cond-> (str "HostRegexp(`" host "`)")
     path-prefix (str " && PathPrefix(`" path-prefix "`)")))
 
 (defn- build-routes [module]
