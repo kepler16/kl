@@ -57,7 +57,14 @@
 
     (log/info (str "@|green Service default-endpoint has been updated |@"))))
 
-(defn- list-services [props]
+(defn- list-service-list [services]
+  (doseq [service services]
+    (println (:name service))))
+
+(defn- list-service-table [services]
+  (pprint/print-table [:name :default-endpoint] services))
+
+(defn list-services [props]
   (let [module-name (prompt.config/get-module-name props)
 
         {:keys [modules]} (api.resolver/pull! module-name {})
@@ -67,7 +74,9 @@
                       (map (fn [[service-name service]]
                              (merge service {:name (name service-name)}))))]
 
-    (pprint/print-table [:name :default-endpoint] services)))
+    (case (:output props)
+      "names" (list-service-list services)
+      "table" (list-service-table services))))
 
 (def cmd
   {:command "services"
@@ -76,7 +85,11 @@
    :subcommands [{:command "list"
                   :description "List all services"
 
-                  :opts [{:option "module"
+                  :opts [{:option "output"
+                          :short "o"
+                          :default "table"
+                          :type :string},
+                         {:option "module"
                           :short 0
                           :type :string}]
 
@@ -86,13 +99,13 @@
                   :description "Set the default endpoint for a service"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}
                          {:option "service"
-                          :short 1
+                          :short 0
                           :type :string}
                          {:option "endpoint"
-                          :short 2
+                          :short 1
                           :type :string}]
 
                   :runs set-default-service-endpoint!}]})
