@@ -91,7 +91,7 @@
                   :description "List all routes"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}
 
                          {:option "output"
@@ -105,7 +105,7 @@
                   :description "Apply any route changes"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}]
 
                   :runs apply-routes!}]})

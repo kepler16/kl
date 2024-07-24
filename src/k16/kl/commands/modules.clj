@@ -33,11 +33,12 @@
                   :description "Pull down changes to a module"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}
 
                          {:option "update"
                           :default false
+                          :short 0
                           :type :with-flag}]
 
                   :runs pull!}
@@ -46,11 +47,12 @@
                   :description "Resolve the latest sha's of a module. This is the same as `pull --update`"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}
 
                          {:option "force"
                           :default false
+                          :short 0
                           :type :with-flag}]
 
                   :runs (fn [props]

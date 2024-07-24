@@ -90,7 +90,7 @@
                           :default "table"
                           :type :string},
                          {:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}]
 
                   :runs list-services}

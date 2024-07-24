@@ -38,10 +38,11 @@
                   :description "List all endpoints"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}
 
                          {:option "service"
+                          :short 0
                           :type :string}]
 
                   :runs list-endpoints}]})
