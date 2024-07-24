@@ -77,7 +77,7 @@
                   :description "List all services"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}]
 
                   :runs list-services}
@@ -86,13 +86,13 @@
                   :description "Set the default endpoint for a service"
 
                   :opts [{:option "module"
-                          :short 0
+                          :short "m"
                           :type :string}
                          {:option "service"
-                          :short 1
+                          :short 0
                           :type :string}
                          {:option "endpoint"
-                          :short 2
+                          :short 1
                           :type :string}]
 
                   :runs set-default-service-endpoint!}]})

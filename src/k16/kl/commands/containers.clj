@@ -18,7 +18,7 @@
    :description "Select containers to run"
 
    :opts [{:option "module"
-           :short 0
+           :short "m"
            :type :string}]
 
    :runs (fn [props]
@@ -43,7 +43,7 @@
    :description "Select containers to run"
 
    :opts [{:option "module"
-           :short 0
+           :short "m"
            :type :string}]
 
    :runs (fn [props]
@@ -90,7 +90,7 @@
    :description "Stop all running containers "
 
    :opts [{:option "module"
-           :short 0
+           :short "m"
            :type :string}]
 
    :runs (fn [props]
