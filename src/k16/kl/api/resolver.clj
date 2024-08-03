@@ -23,11 +23,23 @@
 
     (:sha data)))
 
+(defn- get-default-branch [identifier]
+  (let [res (api.github/request {:path (str "/repos/" identifier)})
+        data (json/read-value (:body res) json/keyword-keys-object-mapper)]
+
+    (when (not= 200 (:status res))
+      (log/info (str "Failed to resolve default branch for " identifier))
+      (cli.util/exit! (:message data) 1))
+
+    (or (:default_branch data)
+        "master")))
+
 (defn- resolve-module-ref [{:keys [url sha ref subdir]}]
   (when-not sha
     (log/debug (str "Resolving " url (if subdir (str "/" subdir) ""))))
 
-  (let [sha (if sha sha (get-commit-for-ref url ref))]
+  (let [ref (if ref ref (get-default-branch url))
+        sha (if sha sha (get-commit-for-ref url ref))]
     (cond-> {:url url :sha sha :ref ref}
       subdir (assoc :subdir subdir))))
 
@@ -44,12 +56,6 @@
           (p/vthread
            (let [lock-entry (get lock submodule-name)
                  current-reference (:ref lock-entry)
-
-                 ref (when (and (not (:sha partial-ref))
-                                (not (:ref partial-ref)))
-                       "master")
-                 partial-ref (cond-> partial-ref
-                               ref (assoc :ref ref))
 
                  should-resolve?
                  (or (not (:sha current-reference))

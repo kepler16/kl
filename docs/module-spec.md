@@ -14,7 +14,7 @@ containers | map? | A docker-compose [`services`](https://docs.docker.com/compos
 Field | Type | Description
 -|-|-
 url | string | The github repo identifier of a remote module in the form `<owner>/<repo>`. Currently this is the only supported value but in future this will be expanded to support additional remote sources.
-ref | string? | A git ref that the remote module should be resolved against. Defaults to `master`
+ref | string? | A git ref that the remote module should be resolved against. Defaults to the default branch of the repo or`master`
 sha | string? | An exact sha that should be used instead of dynamically resolving it from a ref. Exclusive with ref.
 subdir | string? | A directory path within the remote repository that the `module` config file should be resolved from. Defaults to `.kl`
 
