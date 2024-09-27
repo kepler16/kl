@@ -1,3 +1,6 @@
+default:
+  @just --list
+
 build:
   clojure -T:build build
 
