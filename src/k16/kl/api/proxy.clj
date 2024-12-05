@@ -1,5 +1,6 @@
 (ns k16.kl.api.proxy
   (:require
+   [k16.kl.log :as log]
    [clj-yaml.core :as yaml]
    [k16.kl.api.fs :as api.fs]))
 
@@ -19,18 +20,24 @@
 
                        endpoint-name (or (:endpoint route)
                                          (:default-endpoint service))
-                       endpoint (get-in service [:endpoints endpoint-name])
-
-                       traefik-service-name (str (name service-name) "-" (name endpoint-name))]
+                       endpoint (get-in service [:endpoints endpoint-name])]
 
                    (if (and service endpoint)
-                     (-> acc
-                         (assoc-in [:http :routers (name route-name)]
-                                   {:rule (route->traefik-rule route)
-                                    :service traefik-service-name})
-                         (assoc-in [:http :services traefik-service-name :loadbalancer :servers]
-                                   [{:url (:url endpoint)}]))
-                     acc)))
+                     (let [traefik-service-name (str (name service-name)
+                                                     "-"
+                                                     (name endpoint-name))]
+                       (-> acc
+                           (assoc-in [:http :routers (name route-name)]
+                                     {:rule (route->traefik-rule route)
+                                      :service traefik-service-name})
+                           (assoc-in [:http :services traefik-service-name :loadbalancer :servers]
+                                     [{:url (:url endpoint)}])))
+                     (do (when-not service
+                           (log/warn (str "Unknown service " service-name)))
+                         (when (and endpoint-name
+                                    (not endpoint))
+                           (log/warn (str "Unknown endpoint " endpoint-name)))
+                         acc))))
                {})))
 
 (defn write-proxy-config! [{:keys [module-name module]}]

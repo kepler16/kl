@@ -1,6 +1,6 @@
 (ns k16.kl.log
-  (:require 
-    [jansi-clj.core :as color]))
+  (:require
+   [jansi-clj.core :as color]))
 
 (def ^:private lock (Object.))
 
@@ -11,6 +11,10 @@
 (defn error [msg]
   (locking lock
     (println (color/render (str "@|red " (color/render msg) "|@")))))
+
+(defn warn [msg]
+  (locking lock
+    (println (color/render (str "@|yellow " (color/render msg) "|@")))))
 
 (defn debug [msg]
   (locking lock
