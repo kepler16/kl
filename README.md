@@ -13,15 +13,15 @@ stack so long as the stack is or can be dockerized.
 
 ### Index
 
-+ [**Installation**](#installation)
-+ [**Initial Setup**](#initial-setup)
-+ [**Network Topology**](./docs/network-topology.md)
-+ [**Concepts**](#concepts)
-  + [**Modules**](#modules)
-  + [**Services**](#services)
-  + [**Endpoints**](#endpoints)
-  + [**Routes**](#routes)
-+ [**Prompts**](#Prompts)
+- [**Installation**](#installation)
+- [**Initial Setup**](#initial-setup)
+- [**Network Topology**](./docs/network-topology.md)
+- [**Concepts**](#concepts)
+  - [**Modules**](#modules)
+  - [**Services**](#services)
+  - [**Endpoints**](#endpoints)
+  - [**Routes**](#routes)
+- [**Prompts**](#Prompts)
 
 ---
 
@@ -41,7 +41,7 @@ You can use the below script to automatically install the latest release
 bash < <(curl -s https://raw.githubusercontent.com/kepler16/kl/master/install.sh)
 ```
 
-Or you can get the binaries directly from the GitHub releases page and put them on your PATH.
+Or you can get the binaries directly from the GitHub releases page and put them on your `PATH`.
 
 ---
 
@@ -67,8 +67,8 @@ sudo mkdir -p /etc/resolver
 echo 'nameserver 127.0.0.1' | sudo tee -a /etc/resolver/test > /dev/null
 ```
 
-KL runs this DNS server for you as one of the networking containers. See the [Network
-Topology](./docs/network-topology.md) document for more information on the networking containers.
+KL runs this DNS server for you as one of the networking containers. See the
+[Network Topology](./docs/network-topology.md) document for more information on the networking containers.
 
 Now you can start the docker network and proxy containers:
 
@@ -79,8 +79,8 @@ kl network start
 ### `Linux`
 
 Linux doesn't have a completely standard way of handling DNS and so this setup will depend a bit on your particular
-setup. A very common/standard DNS resolver setup on Linux is `systemd-resolved` and so below is a guide on how to set
-get setup using this. If you don't use `systemd-resolved` then you will need to configure your system to route `.test`
+setup. A very common/standard DNS resolver setup on Linux is `systemd-resolved` and so below is a guide on how to get
+setup using this. If you don't use `systemd-resolved` then you will need to configure your system to route `.test`
 domains to `127.0.0.1` however is appropriate for you.
 
 Edit your `/etc/systemd/resolved.conf` file and add the following to the `[Resolve]` section:
@@ -109,9 +109,9 @@ kl network start
 
 > [!NOTE]
 >
-> On Linux the host DNS network container's port defaults to binding to `5343`. If you would like to change this
-> you can start the networking components with a different port by running `kl network start --host-dns-port=<custom-port>`. 
-> You will then also need to update your `/etc/systemd/resolved.conf` file to match.
+> On Linux the host DNS network container's port defaults to binding to `5343`. If you would like to change this you can
+> start the networking components with a different port by running `kl network start --host-dns-port=<custom-port>`. You
+> will then also need to update your `/etc/systemd/resolved.conf` file to match.
 
 ---
 
@@ -130,8 +130,8 @@ with regardless of where those services are running or what their ip:port combin
 These domains are stable across all developers' machines and don't change when a developer needs to alter how or where
 they are running any particular service.
 
-For an overview of the network topology constructed by kl head over to the [Network
-Topology](./docs/network-topology.md) document.
+For an overview of the network topology constructed by kl head over to the
+[Network Topology](./docs/network-topology.md) document.
 
 #### Containers
 
@@ -174,7 +174,7 @@ A module is a directory located in `~/.config/kl/modules/` that must contain at 
                                     :service :example}}}
 
  :containers {:example {:image "ghcr.io/example/example:{{SHA_SHORT}}"
-                        :volumes ["{{DIR}}/config.toml:/config.toml"]}}} 
+                        :volumes ["{{DIR}}/config.toml:/config.toml"]}}}
 ```
 
 #### Module Resolution
@@ -182,9 +182,9 @@ A module is a directory located in `~/.config/kl/modules/` that must contain at 
 Any submodules defined in a module will be recursively resolved and deep-merged with its parent module. When there are
 module conflicts (more than one module with the same name) then they are resolved as follows:
 
-+ If the conflict is in a child module, the parent will be used.
-+ If there are no matching parent modules then the chosen module is essentially random - the first module to resolve
-will be used.
+- If the conflict is in a child module, the parent will be used.
+- If there are no matching parent modules then the chosen module is essentially random - the first module to resolve
+  will be used.
 
 The module resolution is performed once and the result stored in a lockfile called `module.lock.edn`. This allows a
 developers' local dev-setup to be unaffected by any upstream changes _by default_ until the developer decides to
@@ -209,9 +209,13 @@ defined by one of the referenced submodules.
 When a module is resolved kl will perform some basic variable substitution to allow for simple templating. Variables
 should be in the form `{{VAR_NAME}}` where `VAR_NAME` can be one of the following:
 
-Variable | Description ---|--- SHA | The full git SHA that the module was resolved as SHA_SHORT | The short version of
-`SHA` - only the first 7 chars DIR | This is the local module directory on the host machine. This can be used for
-referencing config files that are included as part of the module.
+Here's the properly formatted markdown table:
+
+| Variable  | Description                                                                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| SHA       | The full git SHA that the module was resolved as                                                                                               |
+| SHA_SHORT | The short version of `SHA` - only the first 7 chars                                                                                            |
+| DIR       | This is the local module directory on the host machine. This can be used for referencing config files that are included as part of the module. |
 
 Here is an example module that makes use of templating:
 
@@ -251,15 +255,15 @@ container/docker network. This also means that `localhost` or `127.0.0.1` does _
 
 Below are some common ways of addressing services running in different contexts:
 
-+ A container called `example` with a port `8080` defined in the module could be addressed as
-  + `http://example:8080`
-  + `http://<container-ip>:8080`
-+ A process running on the host and bound to port `8080` could be addressed as
-  + On macOS and Linux* - `http://host.docker.internal:8080`
-  + On Linux - `http://172.17.0.1:8080`
+- A container called `example` with a port `8080` defined in the module could be addressed as
+  - `http://example:8080`
+  - `http://<container-ip>:8080`
+- A process running on the host and bound to port `8080` could be addressed as
+  - On macOS and Linux\* - `http://host.docker.internal:8080`
+  - On Linux - `http://172.17.0.1:8080`
 
 > [!NOTE]
-> 
+>
 > On **Linux\*** docker does not configure the `host.docker.internal` domain which is typically only available on macOS
 > when using something like Docker Desktop.
 >

@@ -11,7 +11,7 @@ All three components are running inside a Docker network and have predefined, st
 Which this topology, the following properties are observed:
 
 + All `*.test` DNS requests made from the host machine are routed to `127.0.0.1`
-+ All `*.test` DNS requests made from within the docker network are routed to `172.16.238.4` which is the IP address of the proxy inside the network
++ All `*.test` DNS requests made from within the docker network are routed to `172.5.0.101` which is the IP address of the proxy inside the network
 
 > Note: All docker containers that need to be able to resolve `.test` domains must have their DNS server (use the flag `--dns`) set to the IP of the internal dnsmasq container
 
@@ -31,17 +31,17 @@ flowchart TD
 
       proxy[Traefik Proxy]
 
-      proc1 -. proc2.test .-> di
-      proc2 -. proc3.test .-> di
+      proc1 -. "proc2.test" .-> di
+      proc2 -. "proc3.test" .-> di
 
       di -. dns resolution .-> proxy
     end
   end
 
 
-  proc3 -. proc1.test .-> de -. dns resolution .-> proxy
+  proc3 -. "proc1.test" .-> de -. dns resolution .-> proxy
 
-  proxy --proxies to--> proc1 & proc2 & proc3
+  proxy -- "proxies to" --> proc1 & proc2 & proc3
 ```
 
 ## IPs
