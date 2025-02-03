@@ -31,17 +31,17 @@ flowchart TD
 
       proxy[Traefik Proxy]
 
-      proc1 -. proc2.test .-> di
-      proc2 -. proc3.test .-> di
+      proc1 -. "proc2.test" .-> di
+      proc2 -. "proc3.test" .-> di
 
       di -. dns resolution .-> proxy
     end
   end
 
 
-  proc3 -. proc1.test .-> de -. dns resolution .-> proxy
+  proc3 -. "proc1.test" .-> de -. dns resolution .-> proxy
 
-  proxy --proxies to--> proc1 & proc2 & proc3
+  proxy -- "proxies to" --> proc1 & proc2 & proc3
 ```
 
 ## IPs
