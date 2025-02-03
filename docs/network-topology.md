@@ -11,7 +11,7 @@ All three components are running inside a Docker network and have predefined, st
 Which this topology, the following properties are observed:
 
 + All `*.test` DNS requests made from the host machine are routed to `127.0.0.1`
-+ All `*.test` DNS requests made from within the docker network are routed to `172.16.238.4` which is the IP address of the proxy inside the network
++ All `*.test` DNS requests made from within the docker network are routed to `172.5.0.101` which is the IP address of the proxy inside the network
 
 > Note: All docker containers that need to be able to resolve `.test` domains must have their DNS server (use the flag `--dns`) set to the IP of the internal dnsmasq container
 
