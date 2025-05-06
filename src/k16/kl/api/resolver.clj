@@ -51,7 +51,7 @@
 
 (defn- resolve-module-tree [{:keys [module lock force-resolve?] :as props}]
   (->> (:modules module)
-       (map
+       (mapv
         (fn [[submodule-name partial-ref]]
           (p/vthread
            (let [lock-entry (get lock submodule-name)
@@ -159,17 +159,17 @@
 
     (when (seq module-diff)
       (->> module-diff
-           (map (fn [[submodule-name {:keys [ref removed?]}]]
-                  (p/vthread
-                   (if removed?
-                     (module.downloader/rm-local-module!
-                      {:module-name module-name
-                       :submodule-name (name submodule-name)})
+           (mapv (fn [[submodule-name {:keys [ref removed?]}]]
+                   (p/vthread
+                    (if removed?
+                      (module.downloader/rm-local-module!
+                       {:module-name module-name
+                        :submodule-name (name submodule-name)})
 
-                     (module.downloader/download-remote-module!
-                      {:module-name module-name
-                       :submodule-name (name submodule-name)
-                       :module-ref ref})))))
+                      (module.downloader/download-remote-module!
+                       {:module-name module-name
+                        :submodule-name (name submodule-name)
+                        :module-ref ref})))))
 
            p/all
            deref)

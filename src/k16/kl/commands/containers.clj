@@ -29,12 +29,12 @@
 
                  state (api.state/get-state module-name)
 
-                 containers (->> (:containers module)
-                                 (map (fn [[container-name container]]
-                                        (merge container
-                                               {:name (name container-name)
-                                                :enabled (get-in state [:containers container-name :enabled]
-                                                                 (get-in module [:containers container-name :enabled] true))}))))]
+                 containers (mapv (fn [[container-name container]]
+                                    (merge container
+                                           {:name (name container-name)
+                                            :enabled (get-in state [:containers container-name :enabled]
+                                                             (get-in module [:containers container-name :enabled] true))}))
+                                  (:containers module))]
 
              (pprint/print-table [:name :enabled] containers)))})
 
@@ -54,27 +54,27 @@
 
                  state (api.state/get-state module-name)
 
-                 options (->> (:containers module)
-                              (map (fn [[container-name]]
-                                     {:value (name container-name)
-                                      :label (name container-name)
-                                      :checked (get-in state [:containers container-name :enabled] true)})))
+                 options (mapv (fn [[container-name]]
+                                 {:value (name container-name)
+                                  :label (name container-name)
+                                  :checked (get-in state [:containers container-name :enabled] true)})
+                               (:containers module))
 
                  selection-result (prompt/select-multi "Select Services" options)
                  _ (when-not selection-result
                      (cli.utils/exit! "Cancelled" 1))
 
-                 selected-containers (->> selection-result
-                                          (map keyword)
-                                          set)
+                 selected-containers (into #{}
+                                           (map keyword)
+                                           selection-result)
 
                  updated-state
                  (assoc state :containers
-                        (->> (:containers module)
-                             (map (fn [[container-name]]
-                                    (let [enabled (boolean (some #{container-name} selected-containers))]
-                                      [container-name {:enabled enabled}])))
-                             (into {})))]
+                        (into {}
+                              (map (fn [[container-name]]
+                                     (let [enabled (boolean (some #{container-name} selected-containers))]
+                                       [container-name {:enabled enabled}])))
+                              (:containers module)))]
 
              (api.state/save-state module-name updated-state)
 

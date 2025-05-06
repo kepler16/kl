@@ -14,16 +14,16 @@
                (:networks module) (assoc :networks (:networks module)))
 
         containers
-        (->> (:containers module)
-             (filter (fn [[_ container]]
-                       (get container :enabled true)))
-             (map (fn [[container-name container]]
-                    [container-name
-                     (metamerge/meta-merge {:networks {:kl {}}
-                                            :dns "172.5.0.100"}
-                                           (dissoc container :enabled))]))
-
-             (into {}))]
+        (into {}
+              (comp
+               (filter (fn [[_ container]]
+                         (get container :enabled true)))
+               (map (fn [[container-name container]]
+                      [container-name
+                       (metamerge/meta-merge {:networks {:kl {}}
+                                              :dns "172.5.0.100"}
+                                             (dissoc container :enabled))])))
+              (:containers module))]
 
     (cond-> base
       (seq containers) (assoc :services containers))))
@@ -41,13 +41,9 @@
     (io/make-parents compose-file)
     (spit compose-file (yaml/generate-string compose-data))
 
-    (try
-      (proc/shell (concat
-                   ["docker" "compose"
-                    "--project-name" project-name]
-
-                   args))
-      (catch Exception _))))
+    (try (proc/shell (into ["docker" "compose" "--project-name" project-name]
+                           args))
+         (catch Exception _))))
 
 (defn run-module! [{:keys [module-name module direction]}]
   (run-module-containers! {:module module

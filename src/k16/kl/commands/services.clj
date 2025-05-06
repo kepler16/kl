@@ -22,10 +22,10 @@
         service-name
         (or (-> props :service keyword)
             (-> (prompt/select "Select Service"
-                               (->> (get-in module [:network :services])
-                                    (map (fn [[service-name]]
-                                           {:value (name service-name)
-                                            :label (name service-name)}))))
+                               (mapv (fn [[service-name]]
+                                       {:value (name service-name)
+                                        :label (name service-name)})
+                                     (get-in module [:network :services])))
                 keyword))
 
         _ (when-not service-name (cli.utils/exit! "No service selected" 1))
@@ -36,10 +36,10 @@
         endpoint-name
         (or (-> props :endpoint keyword)
             (-> (prompt/select "Select Default Endpoint"
-                               (->> (:endpoints service)
-                                    (map (fn [[endpoint-name]]
-                                           {:value (name endpoint-name)
-                                            :label (name endpoint-name)}))))
+                               (mapv (fn [[endpoint-name]]
+                                       {:value (name endpoint-name)
+                                        :label (name endpoint-name)})
+                                     (:endpoints service)))
                 keyword))
 
         _ (when-not endpoint-name (cli.utils/exit! "No endpoint selected" 1))
@@ -55,7 +55,7 @@
       (api.proxy/write-proxy-config! {:module-name module-name
                                       :module module}))
 
-    (log/info (str "@|green Service default-endpoint has been updated |@"))))
+    (log/info "@|green Service default-endpoint has been updated |@")))
 
 (defn- list-services [props]
   (let [module-name (prompt.config/get-module-name props)
@@ -63,9 +63,9 @@
         {:keys [modules]} (api.resolver/pull! module-name {})
         module (api.module/get-resolved-module module-name modules)
 
-        services (->> (get-in module [:network :services])
-                      (map (fn [[service-name service]]
-                             (merge service {:name (name service-name)}))))]
+        services (mapv (fn [[service-name service]]
+                         (merge service {:name (name service-name)}))
+                       (get-in module [:network :services]))]
 
     (pprint/print-table [:name :default-endpoint] services)))
 

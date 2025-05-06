@@ -11,10 +11,10 @@
 (set! *warn-on-reflection* true)
 
 (defn- filter-by-known [left right]
-  (->> left
-       (filter (fn [[container-name]]
-                 (contains? right container-name)))
-       (into {})))
+  (into {}
+        (filter (fn [[container-name]]
+                  (contains? right container-name)))
+        left))
 
 (defn- merge-modules [module-name root-module sub-modules]
   (let [state (api.state/get-state module-name)

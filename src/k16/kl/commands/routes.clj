@@ -18,7 +18,7 @@
                             (group-by :host)
                             (map-indexed list))]
 
-    (log/info (str "@|bold routes|@"))
+    (log/info "@|bold routes|@")
 
     (doseq [[i [host routes]] routes-by-host]
       (log/info (str (get-tree-branch i (count routes-by-host)) " @|yellow " host "|@"))

@@ -14,19 +14,18 @@
         selected-service-name (keyword (:service props))
 
         endpoints (->> (get-in module [:network :services])
-                       (filter (fn [[service-name]]
-                                 (if selected-service-name
-                                   (= service-name selected-service-name)
-                                   true)))
+                       (filterv (fn [[service-name]]
+                                  (if selected-service-name
+                                    (= service-name selected-service-name)
+                                    true)))
 
-                       (map (fn [[service-name service]]
-                              (->> (:endpoints service)
-                                   (map (fn [[endpoint-name endpoint]]
-                                          {:service service-name
-                                           :endpoint endpoint-name
-                                           :url (:url endpoint)
-                                           :is-default (= (:default-endpoint service) endpoint-name)})))))
-                       flatten)]
+                       (mapcat (fn [[service-name service]]
+                                 (mapv (fn [[endpoint-name endpoint]]
+                                         {:service service-name
+                                          :endpoint endpoint-name
+                                          :url (:url endpoint)
+                                          :is-default (= (:default-endpoint service) endpoint-name)})
+                                       (:endpoints service)))))]
 
     (pprint/print-table [:service :endpoint :url :is-default] endpoints)))
 

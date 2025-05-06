@@ -6,5 +6,6 @@
 .lsp
 .clj-kondo
 .nrepl-port
+deps.local.edn
 
 target

@@ -13,7 +13,7 @@
 
 (defn- build-routes [module]
   (->> (get-in module [:network :routes])
-       (filter (fn [[_ route]] (get route :enabled true)))
+       (filterv (fn [[_ route]] (get route :enabled true)))
        (reduce (fn [acc [route-name route]]
                  (let [service-name (keyword (:service route))
                        service (get-in module [:network :services service-name])

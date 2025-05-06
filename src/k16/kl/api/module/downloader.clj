@@ -52,12 +52,12 @@
   ([module-ref] (download-module-config module-ref {}))
   ([{:keys [url sha subdir] :or {subdir ".kl"}} vars]
    (let [file-name (->> (list-repo-files url sha subdir)
-                        (map (fn [file]
-                               (-> (:path file)
-                                   (str/split #"\/")
-                                   last)))
-                        (filter (fn [file]
-                                  (re-matches #"module\.(edn|yaml|yml|json)" file)))
+                        (mapv (fn [file]
+                                (-> (:path file)
+                                    (str/split #"\/")
+                                    last)))
+                        (filterv (fn [file]
+                                   (re-matches #"module\.(edn|yaml|yml|json)" file)))
                         first)]
 
      (->> (read-repo-file url sha (relative-to subdir file-name))
@@ -81,13 +81,13 @@
 
     (let [module (download-module-config module-ref vars)]
       @(p/all
-        (->> (:include module)
-             (map (fn [file]
-                    (p/vthread
-                     (log/debug (str "Downloading " file " from " submodule-name))
-                     (let [contents (->> (read-repo-file url sha (relative-to subdir file))
-                                         (replace-vars vars))]
-                       (spit (api.fs/from-submodule-dir module-name submodule-name file) contents)))))))
+        (mapv (fn [file]
+                (p/vthread
+                 (log/debug (str "Downloading " file " from " submodule-name))
+                 (let [contents (->> (read-repo-file url sha (relative-to subdir file))
+                                     (replace-vars vars))]
+                   (spit (api.fs/from-submodule-dir module-name submodule-name file) contents))))
+              (:include module)))
 
       (save-module-ref module-name submodule-name module-ref)
       (api.fs/write-edn (api.fs/from-submodule-dir module-name submodule-name "module.edn") module))))
@@ -98,17 +98,17 @@
 (defn describe-downloaded-submodules [module-name]
   (let [dir (api.fs/from-module-work-dir module-name ".modules")]
     (->> (.listFiles dir)
-         (filter (fn [^java.io.File file]
-                   (.isDirectory file)))
-         (map (fn [^java.io.File file]
-                (.getName file)))
-         (filter (fn [name]
-                   (not (str/starts-with? name "."))))
+         (filterv (fn [^java.io.File file]
+                    (.isDirectory file)))
+         (mapv (fn [^java.io.File file]
+                 (.getName file)))
+         (filterv (fn [name]
+                    (not (str/starts-with? name "."))))
 
-         (map (fn [submodule-name]
-                (p/vthread
-                 (let [ref (load-module-ref module-name submodule-name)]
-                   [(keyword submodule-name) {:ref ref}]))))
+         (mapv (fn [submodule-name]
+                 (p/vthread
+                  (let [ref (load-module-ref module-name submodule-name)]
+                    [(keyword submodule-name) {:ref ref}]))))
          p/all
          deref
          (into {}))))

@@ -9,7 +9,7 @@
 
 (defn- gen-hash [n]
   (->> (repeatedly n #(rand-int 256))
-       (map #(format "%02x" %))
+       (mapv #(format "%02x" %))
        (apply str)))
 
 (defn- get-tmp-dir []
@@ -42,14 +42,14 @@
 (defn- start-network! [{:keys [host-dns host-dns-port add-host]}]
   (let [workdir (api.fs/from-config-dir ".kl/network")
 
-        extra-hosts (->> (concat default-hosts add-host)
+        extra-hosts (->> (into default-hosts add-host)
                          (reduce (fn [acc host]
                                    (let [[host ip] (str/split host #":")]
                                      (assoc acc host ip)))
                                  {})
-                         (filter (fn [[_ ip]]
-                                   (and ip (not= "" ip))))
-                         (map (fn [[host ip]] (str host ":" ip))))
+                         (filterv (fn [[_ ip]]
+                                    (and ip (not= "" ip))))
+                         (mapv (fn [[host ip]] (str host ":" ip))))
 
         module (cond-> (write-network-module)
                  (not host-dns)
