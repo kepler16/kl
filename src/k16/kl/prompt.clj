@@ -43,7 +43,7 @@
         common-style-options ["--header.foreground='#d3869b'"]
 
         header (str " --header '" title "' ")
-        height (str " --height " (+ (count options) 1) " ")
+        height (str " --height " (+ (count options) 2) " ")
         preselected (if (seq selected)
                       (str " --selected " (str/join "," selected) " ")
                       "")
