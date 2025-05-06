@@ -18,4 +18,7 @@
 
            :native {:extra-deps {com.github.clj-easy/graal-build-time {:mvn/version "1.0.5"}}}
 
-           :dev {:extra-paths ["dev"]}}}
+           :test {:extra-deps {lambdaisland/kaocha {:mvn/version "1.91.1392"}
+                               nubank/matcher-combinators {:mvn/version "3.9.1"}}
+                  :extra-paths ["test"]
+                  :main-opts ["-m" "kaocha.runner"]}}}

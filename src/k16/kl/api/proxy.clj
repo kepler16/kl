@@ -11,7 +11,7 @@
   (cond-> (str "HostRegexp(`" host "`)")
     path-prefix (str " && PathPrefix(`" path-prefix "`)")))
 
-(defn- build-routes [module]
+(defn- build-routes [module-name module]
   (->> (get-in module [:network :routes])
        (filterv (fn [[_ route]] (get route :enabled true)))
        (reduce (fn [acc [route-name route]]
@@ -23,11 +23,12 @@
                        endpoint (get-in service [:endpoints endpoint-name])]
 
                    (if (and service endpoint)
-                     (let [traefik-service-name (str (name service-name)
+                     (let [traefik-service-name (str module-name "-"
+                                                     (name service-name)
                                                      "-"
                                                      (name endpoint-name))]
                        (-> acc
-                           (assoc-in [:http :routers (name route-name)]
+                           (assoc-in [:http :routers (str module-name "-" (name route-name))]
                                      {:rule (route->traefik-rule route)
                                       :service traefik-service-name})
                            (assoc-in [:http :services traefik-service-name :loadbalancer :servers]
@@ -41,6 +42,6 @@
                {})))
 
 (defn write-proxy-config! [{:keys [module-name module]}]
-  (let [routes (build-routes module)
+  (let [routes (build-routes module-name module)
         file (get-proxies-projection-file module-name)]
     (spit file (yaml/generate-string routes))))
