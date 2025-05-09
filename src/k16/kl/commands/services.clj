@@ -57,7 +57,14 @@
 
     (log/info "@|green Service default-endpoint has been updated |@")))
 
-(defn- list-services [props]
+(defn- list-service-list [services]
+  (doseq [service services]
+    (println (:name service))))
+
+(defn- list-service-table [services]
+  (pprint/print-table [:name :default-endpoint] services))
+
+(defn list-services [props]
   (let [module-name (prompt.config/get-module-name props)
 
         {:keys [modules]} (api.resolver/pull! module-name {})
@@ -67,7 +74,9 @@
                          (merge service {:name (name service-name)}))
                        (get-in module [:network :services]))]
 
-    (pprint/print-table [:name :default-endpoint] services)))
+    (case (:output props)
+      "names" (list-service-list services)
+      "table" (list-service-table services))))
 
 (def cmd
   {:command "services"
@@ -76,7 +85,11 @@
    :subcommands [{:command "list"
                   :description "List all services"
 
-                  :opts [{:option "module"
+                  :opts [{:option "output"
+                          :short "o"
+                          :default "table"
+                          :type :string},
+                         {:option "module"
                           :short "m"
                           :type :string}]
 
