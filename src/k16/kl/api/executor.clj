@@ -28,7 +28,8 @@
     (cond-> base
       (seq containers) (assoc :services containers))))
 
-(defn run-module-containers! [{:keys [module direction project-name workdir]}]
+(defn run-module-containers! [{:keys [module direction delete-volumes
+                                      project-name workdir]}]
   (let [compose-data (build-docker-compose module)
         compose-file (io/file workdir "docker-compose.yaml")
 
@@ -36,7 +37,8 @@
 
         args (case direction
                :up ["-f" (.toString compose-file) "up" "-d" "--remove-orphans"]
-               :down ["down"])]
+               :down (cond-> ["down"]
+                       delete-volumes (conj "--volumes")))]
 
     (io/make-parents compose-file)
     (spit compose-file (yaml/generate-string compose-data))
@@ -45,8 +47,9 @@
                            args))
          (catch Exception _))))
 
-(defn run-module! [{:keys [module-name module direction]}]
+(defn run-module! [{:keys [module-name module direction delete-volumes]}]
   (run-module-containers! {:module module
                            :direction direction
+                           :delete-volumes delete-volumes
                            :project-name (str "kl-" module-name)
                            :workdir (api.fs/from-module-work-dir module-name)}))

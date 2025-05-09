@@ -91,7 +91,11 @@
 
    :opts [{:option "module"
            :short "m"
-           :type :string}]
+           :type :string}
+
+          {:option "delete-volumes"
+           :type :with-flag
+           :default false}]
 
    :runs (fn [props]
            (let [module-name (prompt.config/get-module-name props)
@@ -99,7 +103,8 @@
                  module (api.module/get-resolved-module module-name modules)]
              (api.executor/run-module! {:module-name module-name
                                         :module module
-                                        :direction :down})))})
+                                        :direction :down
+                                        :delete-volumes (:delete-volumes props)})))})
 
 (def cmd
   {:command "containers"
