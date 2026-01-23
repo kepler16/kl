@@ -267,8 +267,12 @@ Below are some common ways of addressing services running in different contexts:
 > On **Linux\*** docker does not configure the `host.docker.internal` domain which is typically only available on macOS
 > when using something like Docker Desktop.
 >
+> If you are using podman (even on linux) then you should have `host.containers.internal` but this is still not portable
+> enough.
+>
 > To allow for a consistent way of addressing the host that works across all operating systems' kl manually adds the
-> `host.docker.internal:172.17.0.1` host to the proxy container.
+> `host.docker.internal:host-gateway` host to the proxy container. The `host-gateway` will be automatically resolved to
+> the appropriate IP address of the host from the docker network context. In docker, this is typically `172.17.0.1`.
 >
 > If you don't want this behaviour you can disable it by running `kl network start --add-host "host.docker.internal:"`
 > (note the empty ip after the ':').

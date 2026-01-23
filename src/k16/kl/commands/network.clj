@@ -36,7 +36,7 @@
 
 (def ^:private default-hosts
   (cond
-    (str/includes? os "linux") ["host.docker.internal:172.17.0.1"]
+    (str/includes? os "linux") ["host.docker.internal:host-gateway"]
     :else []))
 
 (defn- start-network! [{:keys [host-dns host-dns-port add-host]}]
