@@ -11,13 +11,13 @@ jobs:
       matrix:
         include:
         - arch: linux-amd64
-          runs-on: ubuntu-latest
+          runs-on: ubuntu-24.04
         - arch: linux-arm64
-          runs-on: arm-c8
+          runs-on: ubuntu-24.04-arm
         - arch: macos-amd64
-          runs-on: macos-latest
+          runs-on: macos-15-intel
         - arch: macos-arm64
-          runs-on: macos-latest-xlarge
+          runs-on: macos-15
 
     env:
       GITHUB_USERNAME: ${{ secrets.ORG_GITHUB_ACTOR }}
