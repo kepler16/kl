@@ -40,7 +40,7 @@
    :networks {:kl {:ipv4_address "172.5.0.100"}}}
 
   :proxy ^:replace
-  {:image "traefik:v3.1"
+  {:image "traefik:v3.6"
    :restart "unless-stopped"
    :networks {:kl {:ipv4_address "172.5.0.101"}}
    :command ["--api.insecure=true"
