@@ -296,7 +296,7 @@ For a better prompt experience it is highly recommended to have these programs i
 
 ## FAQ
 
-### Why does the host dnsmasq container bind a different port on macOS vs Linux?
+### Why does the host CoreDNS container bind a different port on macOS vs Linux?
 
 On macOS there is no way to specify the port to use when configuring the system resolver via the `/etc/resolver/test`
 path. Therefore, we need to use port `53`.

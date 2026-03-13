@@ -1,0 +1,27 @@
+.:53 {
+    log
+    errors
+    template IN A {
+        match (.*)\.test\.
+        answer "{{ .Name }} 60 IN A 172.5.0.101"
+    }
+    template IN AAAA {
+        match (.*)\.test\.
+        answer "{{ .Name }} 60 IN AAAA ::ffff:172.5.0.101"
+    }
+    forward . /etc/resolv.conf
+}
+
+.:1053 {
+    log
+    errors
+    template IN A {
+        match (.*)\.test\.
+        answer "{{ .Name }} 60 IN A 127.0.0.1"
+    }
+    template IN AAAA {
+        match (.*)\.test\.
+        answer "{{ .Name }} 60 IN AAAA ::1"
+    }
+    forward . /etc/resolv.conf
+}

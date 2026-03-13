@@ -53,12 +53,13 @@
 
         module (cond-> (write-network-module)
                  (not host-dns)
-                 (assoc-in [:containers :dnsmasq-external :enabled]
+                 (assoc-in [:containers :coredns :enabled]
                            false)
 
                  host-dns-port
-                 (assoc-in [:containers :dnsmasq-external :ports]
-                           [(str host-dns-port ":53/udp") (str host-dns-port ":53/tcp")])
+                 (assoc-in [:containers :coredns :ports]
+                           [(str host-dns-port ":1053/udp")
+                            (str host-dns-port ":1053/tcp")])
 
                  (seq extra-hosts)
                  (assoc-in [:containers :proxy :extra_hosts]

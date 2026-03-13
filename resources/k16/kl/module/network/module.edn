@@ -1,5 +1,4 @@
-{:include ["config/dnsmasq-external.conf"
-           "config/dnsmasq-internal.conf"]
+{:include ["config/coredns.Corefile"]
 
  :network {:services {:kl-proxy {:endpoints {:container {:url "http://proxy:8080"}}
                                  :default-endpoint :container}}
@@ -12,31 +11,13 @@
                         :config [{:subnet "172.5.0.0/24"}]}}}
 
  :containers
- {:dnsmasq-external ^:replace
-  {:image "andyshinn/dnsmasq"
-   :volumes ["{{DIR}}/config/dnsmasq-external.conf:/dnsmasq-config/dnsmasq.conf:z"]
-   :platform "linux/amd64"
+ {:coredns ^:replace
+  {:image "coredns/coredns:1.14.2"
+   :volumes ["{{DIR}}/config/coredns.Corefile:/Corefile:z"]
    :restart "unless-stopped"
-   :command ["--conf-file=/dnsmasq-config/dnsmasq.conf"
-             "--except-interface=lo"
-             "--bind-interfaces"
-             "--log-queries"
-             "--log-facility=-"]
-   :ports ["53:53/udp"
-           "53:53/tcp"]
-   :networks ["kl"]
-   :cap_add ["NET_ADMIN"]}
-
-  :dnsmasq-internal ^:replace
-  {:image "andyshinn/dnsmasq"
-   :volumes ["{{DIR}}/config/dnsmasq-internal.conf:/dnsmasq-config/dnsmasq.conf:z"]
-   :platform "linux/amd64"
-   :restart "unless-stopped"
-   :command ["--conf-file=/dnsmasq-config/dnsmasq.conf"
-             "--except-interface=lo"
-             "--bind-interfaces"
-             "--log-queries"
-             "--log-facility=-"]
+   :command ["-conf" "/Corefile"]
+   :ports ["53:1053/udp"
+           "53:1053/tcp"]
    :networks {:kl {:ipv4_address "172.5.0.100"}}}
 
   :proxy ^:replace
