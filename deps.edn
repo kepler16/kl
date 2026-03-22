@@ -9,6 +9,7 @@
         clj-commons/clj-yaml {:mvn/version "1.0.29"}
         babashka/process {:mvn/version "0.6.23"}
         jansi-clj/jansi-clj {:mvn/version "1.0.3"}
+        io.github.TimoKramer/charm.clj {:git/sha "9702ff7e87974daaf18c3080b43b7809efed13c1"}
         cli-matic/cli-matic {:mvn/version "0.5.4"}
         org.clojars.civa86/pretty.cli {:mvn/version "1.0.1"}
         funcool/promesa {:mvn/version "11.0.678"}

@@ -1,0 +1,75 @@
+{
+  "reflection": [
+    {
+      "type": "java.util.ArrayList",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.util.Collection"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.jline.keymap.KeyMap",
+      "methods": [
+        {
+          "name": "bind",
+          "parameterTypes": [
+            "java.lang.Object",
+            "java.lang.CharSequence"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.jline.terminal.Attributes"
+    },
+    {
+      "type": "org.jline.terminal.Terminal"
+    },
+    {
+      "type": "org.jline.terminal.TerminalBuilder"
+    },
+    {
+      "type": "org.jline.terminal.impl.exec.ExecTerminalProvider",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.jline.terminal.impl.ffm.FfmTerminalProvider",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.jline.utils.AttributedString"
+    },
+    {
+      "type": "org.jline.utils.AttributedStringBuilder"
+    },
+    {
+      "type": "org.jline.utils.AttributedStyle"
+    },
+    {
+      "type": "org.jline.utils.Display"
+    },
+    {
+      "type": "org.jline.utils.InfoCmp$Capability"
+    },
+    {
+      "type": "org.jline.utils.NonBlockingReader"
+    },
+    {
+      "type": "org.jline.utils.Signals"
+    }
+  ]
+}

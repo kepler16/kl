@@ -6,6 +6,7 @@
    [k16.kl.api.proxy :as api.proxy]
    [k16.kl.api.resolver :as api.resolver]
    [k16.kl.api.state :as api.state]
+   [k16.kl.commands.services.tui :as services.tui]
    [k16.kl.log :as log]
    [k16.kl.prompt :as prompt]
    [k16.kl.prompt.config :as prompt.config]
@@ -95,4 +96,14 @@
                           :short 1
                           :type :string}]
 
-                  :runs set-default-service-endpoint!}]})
+                  :runs set-default-service-endpoint!}
+
+                 {:command "manage"
+                  :description "Interactive TUI for managing service endpoints"
+
+                  :opts [{:option "module"
+                          :short "m"
+                          :type :string}]
+
+                  :runs (fn [props]
+                          (services.tui/run-tui! props))}]})
