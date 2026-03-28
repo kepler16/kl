@@ -4,10 +4,12 @@
     template IN A {
         match (.*)\.test\.
         answer "{{ .Name }} 60 IN A 172.5.0.101"
+        fallthrough
     }
     template IN AAAA {
         match (.*)\.test\.
         answer "{{ .Name }} 60 IN AAAA ::ffff:172.5.0.101"
+        fallthrough
     }
     forward . /etc/resolv.conf
 }
@@ -18,10 +20,12 @@
     template IN A {
         match (.*)\.test\.
         answer "{{ .Name }} 60 IN A 127.0.0.1"
+        fallthrough
     }
     template IN AAAA {
         match (.*)\.test\.
         answer "{{ .Name }} 60 IN AAAA ::1"
+        fallthrough
     }
     forward . /etc/resolv.conf
 }
