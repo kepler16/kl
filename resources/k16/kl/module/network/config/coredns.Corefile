@@ -11,6 +11,11 @@
         answer "{{ .Name }} 60 IN AAAA ::ffff:172.5.0.101"
         fallthrough
     }
+    template ANY ANY {
+        match (.*)\.test\.
+        rcode NXDOMAIN
+        fallthrough
+    }
     forward . /etc/resolv.conf
 }
 
@@ -25,6 +30,11 @@
     template IN AAAA {
         match (.*)\.test\.
         answer "{{ .Name }} 60 IN AAAA ::1"
+        fallthrough
+    }
+    template ANY ANY {
+        match (.*)\.test\.
+        rcode NXDOMAIN
         fallthrough
     }
     forward . /etc/resolv.conf
